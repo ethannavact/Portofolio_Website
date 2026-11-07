@@ -1,0 +1,382 @@
+---
+import Base from '../layouts/Base.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import { contactRoute, route, serviceAlternates, serviceRoute, type Lang } from '../i18n/routes';
+import { pick, ui } from '../i18n/ui';
+import { examplesFor, getServices, type Service } from '../lib/services';
+import { breadcrumbLd, serviceLd } from '../lib/seo';
+import { plain, rich } from '../lib/rich';
+import { SHOW_DRAFTS } from '../lib/env';
+
+interface Props {
+  lang: Lang;
+  service: Service;
+}
+
+const { lang, service } = Astro.props;
+const t = ui(lang);
+const d = service.data;
+const base = Astro.site ?? new URL(Astro.url.origin);
+const title = pick(d.title, lang);
+const tagline = pick(d.tagline, lang);
+const intro = pick(d.intro, lang);
+const description = plain(pick(d.seoDescription, lang) || tagline || intro, 160);
+const url = new URL(serviceRoute(service.id, lang), base).href;
+
+const examples = await examplesFor(service);
+const others = (await getServices()).filter((s) => s.id !== service.id);
+const fit = d.fit.map((f) => pick(f, lang)).filter(Boolean);
+const includes = d.includes.filter((i) => pick(i.title, lang));
+const process = d.process.filter((i) => pick(i.title, lang));
+// Con un número impar de ejemplos, el primero abre a todo el ancho: sin huecos en la retícula.
+const leadWide = examples.length % 2 === 1;
+---
+
+<Base
+  lang={lang}
+  title={title}
+  description={description}
+  alternates={serviceAlternates(service.id)}
+  current="services"
+  image={examples[0]?.data.cover}
+  imageAlt={examples[0] ? pick(examples[0].data.coverAlt, lang) : undefined}
+  noindex={!d.published}
+  jsonLd={[
+    serviceLd(title, description, url, base),
+    breadcrumbLd([
+      { name: t.home, url: new URL(route('home', lang), base).href },
+      { name: t.servicesTitle, url: new URL(route('services', lang), base).href },
+      { name: title, url },
+    ]),
+  ]}
+>
+  <article>
+    <header class="wrap grid head">
+      <nav class="crumbs label" aria-label={t.breadcrumb}>
+        <a href={route('services', lang)}>{t.servicesTitle}</a>
+        <span aria-hidden="true"> / </span>
+        <span aria-current="page">{title}</span>
+        {!d.published && SHOW_DRAFTS && <span class="badge badge--draft">{t.draft}</span>}
+      </nav>
+      <h1 class="display service-title" data-reveal="lines">{title}</h1>
+      {tagline && <p class="lead tagline" data-reveal>{tagline}</p>}
+      {intro && <div class="prose intro" set:html={rich(intro)} data-reveal />}
+    </header>
+
+    {
+      examples.length > 0 && (
+        <section class="section examples" aria-labelledby="examples-title">
+          <div class="wrap">
+            <div class="section-head">
+              <h2 class="title-l" id="examples-title" data-reveal="lines" data-drift>
+                {t.serviceExamples}
+              </h2>
+              <p class="label">{t.examplesCount(examples.length)}</p>
+            </div>
+            <div class:list={['examples-grid', leadWide && 'lead-wide']} >
+              {examples.map((p, i) => (
+                <ProjectCard
+                  lang={lang}
+                  project={p}
+                  size="large"
+                  aspect={leadWide && i === 0 ? '21/9' : '16/10'}
+                  eager={i < 2}
+                  parallax={leadWide && i === 0 ? undefined : i % 2 === (leadWide ? 1 : 0) ? 20 : 70}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      )
+    }
+
+    {
+      (fit.length > 0 || includes.length > 0) && (
+        <section class="section detail" aria-label={title}>
+          <div class="wrap grid detail-grid">
+            {includes.length > 0 && (
+              <div class="col-includes">
+                <h2 class="label col-title">{t.serviceIncludes}</h2>
+                <ul class="rows" role="list" data-reveal-group>
+                  {includes.map((i) => (
+                    <li class="row">
+                      <h3 class="row-title">{pick(i.title, lang)}</h3>
+                      {pick(i.body, lang) && <p class="muted">{pick(i.body, lang)}</p>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {fit.length > 0 && (
+              <div class="col-fit">
+                <h2 class="label col-title">{t.serviceFit}</h2>
+                <ul class="fit" role="list" data-reveal-group>
+                  {fit.map((f) => (
+                    <li>{f}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </section>
+      )
+    }
+
+    {
+      process.length > 0 && (
+        <section class="section process" aria-labelledby="process-title">
+          <div class="wrap">
+            <h2 class="label col-title" id="process-title">
+              {t.serviceProcess}
+            </h2>
+            <ol class="steps" role="list" style={`--steps: ${process.length}`} data-reveal-group>
+              {process.map((s, i) => (
+                <li class="step">
+                  <span class="label">{String(i + 1).padStart(2, '0')}</span>
+                  <h3 class="row-title">{pick(s.title, lang)}</h3>
+                  {pick(s.body, lang) && <p class="muted">{pick(s.body, lang)}</p>}
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+      )
+    }
+
+    <section class="section wrap closing" aria-labelledby="service-cta">
+      <div class="cta-box">
+        <h2 class="title-l" id="service-cta" data-reveal="lines">{t.serviceCta}</h2>
+        <a class="btn btn--solid" href={contactRoute(lang)}>{t.getInTouch}</a>
+      </div>
+      {
+        others.length > 0 && (
+          <nav class="others" aria-labelledby="others-title">
+            <h2 class="label col-title" id="others-title">
+              {t.otherServices}
+            </h2>
+            <ul role="list">
+              {others.map((s) => (
+                <li>
+                  <a href={serviceRoute(s.id, lang)}>{pick(s.data.title, lang)}</a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )
+      }
+    </section>
+  </article>
+</Base>
+
+<style>
+  .head {
+    row-gap: var(--space-5);
+    padding-block: clamp(var(--space-7), 7vw, var(--space-9)) var(--space-6);
+  }
+
+  .head .crumbs,
+  .head .service-title,
+  .head .tagline,
+  .head .intro {
+    grid-column: 1 / -1;
+  }
+
+  .crumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 var(--space-2);
+  }
+
+  .crumbs a {
+    color: inherit;
+  }
+
+  .service-title {
+    max-width: 16ch;
+    text-wrap: balance;
+  }
+
+  @media (min-width: 64rem) {
+    .head .tagline {
+      grid-column: 1 / span 7;
+    }
+
+    .head .intro {
+      grid-column: 1 / span 7;
+    }
+  }
+
+  .tagline {
+    max-width: 36ch;
+  }
+
+  /* Secciones consecutivas separadas por línea: cada una conserva su aire superior. */
+  article > .section {
+    padding-top: var(--section);
+  }
+
+  .examples {
+    border-top: var(--border);
+  }
+
+  .section-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-7);
+  }
+
+  .examples-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-8) var(--gutter);
+  }
+
+  @media (min-width: 48rem) {
+    .examples-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .examples-grid.lead-wide > :global(:first-child) {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .detail {
+    border-top: var(--border);
+  }
+
+  .detail-grid {
+    row-gap: var(--space-8);
+  }
+
+  .col-includes,
+  .col-fit {
+    grid-column: 1 / -1;
+  }
+
+  @media (min-width: 64rem) {
+    .col-includes {
+      grid-column: 1 / span 7;
+    }
+
+    .col-fit {
+      grid-column: 9 / -1;
+    }
+  }
+
+  .col-title {
+    margin-bottom: var(--space-5);
+  }
+
+  .rows {
+    display: grid;
+  }
+
+  .row {
+    display: grid;
+    gap: var(--space-2);
+    padding-block: var(--space-4);
+    border-top: var(--border);
+  }
+
+  .row:last-child {
+    border-bottom: var(--border);
+  }
+
+  .row-title {
+    font-size: var(--step-1);
+  }
+
+  .fit {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .fit li {
+    padding-left: var(--space-5);
+    position: relative;
+  }
+
+  .fit li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.62em;
+    width: var(--space-3);
+    border-top: 1px solid var(--fg);
+  }
+
+  .process {
+    border-top: var(--border);
+  }
+
+  .steps {
+    display: grid;
+    gap: var(--gutter);
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  @media (min-width: 48rem) {
+    .steps {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 72rem) {
+    .steps {
+      grid-template-columns: repeat(var(--steps), minmax(0, 1fr));
+    }
+  }
+
+  .step {
+    display: grid;
+    gap: var(--space-3);
+    align-content: start;
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--fg);
+  }
+
+  .closing {
+    display: grid;
+    gap: var(--space-8);
+    border-top: var(--border);
+  }
+
+  .cta-box {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-5);
+  }
+
+  .cta-box h2 {
+    max-width: 20ch;
+  }
+
+  .others ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+    font-size: var(--step-1);
+  }
+
+  .others a {
+    display: inline-block;
+    padding-block: var(--space-1);
+  }
+
+  .badge {
+    border: var(--border);
+    padding: 0 var(--space-2);
+  }
+
+  .badge--draft {
+    border-color: var(--draft);
+    color: var(--draft);
+  }
+</style>

@@ -1,0 +1,131 @@
+---
+import '../styles/tokens.css';
+import '../styles/base.css';
+import { ogImage as toOg, type AnyImage } from '../lib/images';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { HTML_LANG, OG_LOCALE, otherLang, type Alternates, type Lang, type RouteKey } from '../i18n/routes';
+import { ui } from '../i18n/ui';
+import { getSite } from '../lib/projects';
+import { IS_PREVIEW, SHOW_DRAFTS } from '../lib/env';
+
+interface Props {
+  lang: Lang;
+  title: string;
+  description: string;
+  alternates: Alternates;
+  image?: AnyImage;
+  imageAlt?: string;
+  jsonLd?: Record<string, unknown>[];
+  noindex?: boolean;
+  type?: 'website' | 'article' | 'profile';
+  current?: RouteKey;
+}
+
+const { lang, title, description, alternates, image, imageAlt, jsonLd = [], noindex = false, type = 'website', current } =
+  Astro.props;
+
+const site = await getSite();
+const t = ui(lang);
+const base = Astro.site ?? new URL(Astro.url.origin);
+const canonical = new URL(alternates[lang], base).href;
+const altLang = otherLang(lang);
+const fullTitle = title === site.name ? title : `${title} — ${site.name}`;
+
+let ogImage: string | undefined;
+let ogSize = { width: 1200, height: 630 };
+if (image) {
+  const og = await toOg(image);
+  ogImage = new URL(og.src, base).href;
+  ogSize = { width: og.width, height: og.height };
+}
+---
+
+<!doctype html>
+<html lang={HTML_LANG[lang]} data-motion="on">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    {IS_PREVIEW && <meta name="claude:viewport-fit-sides" content="cover" />}
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang={HTML_LANG.es} href={new URL(alternates.es, base).href} />
+    <link rel="alternate" hreflang={HTML_LANG.en} href={new URL(alternates.en, base).href} />
+    <link rel="alternate" hreflang="x-default" href={new URL(alternates.es, base).href} />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#f1edea" />
+    <!-- Fuentes provisionales (la referencia usa Helvetica Now Display). -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+    />
+
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:type" content={type} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={OG_LOCALE[lang]} />
+    <meta property="og:locale:alternate" content={OG_LOCALE[altLang]} />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    {ogImage && <meta property="og:image:width" content={String(ogSize.width)} />}
+    {ogImage && <meta property="og:image:height" content={String(ogSize.height)} />}
+    {ogImage && imageAlt && <meta property="og:image:alt" content={imageAlt} />}
+    <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
+
+    <!-- Preferencias antes del primer pintado (evita parpadeos). Con movimiento activo, los
+         elementos que entran animados se ocultan hasta que la capa de movimiento arranca;
+         si no arranca en 2.5 s, se muestran tal cual. -->
+    <script is:inline>
+      (function () {
+        var root = document.documentElement;
+        var saved = null;
+        try { saved = localStorage.getItem('motion'); } catch (e) {}
+        var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        root.dataset.motion = saved || (reduce ? 'off' : 'on');
+        if (root.dataset.motion === 'on') {
+          root.classList.add('motion-js');
+          setTimeout(function () { if (!window.__motionReady) root.classList.remove('motion-js'); }, 2500);
+        }
+      })();
+    </script>
+
+    {jsonLd.map((data) => <script type="application/ld+json" set:html={JSON.stringify(data)} />)}
+  </head>
+  <body>
+    <div class="gl-stage" aria-hidden="true">
+      <canvas data-gl></canvas>
+    </div>
+    <a class="skip-link" href="#contenido">{t.skip}</a>
+    <Header lang={lang} alternates={alternates} current={current} siteName={site.name} />
+    <main id="contenido" tabindex="-1">
+      <slot />
+    </main>
+    <Footer lang={lang} alternates={alternates} site={site} />
+    {SHOW_DRAFTS && <p class="draft-mode label" aria-hidden="true">{t.draftBanner}</p>}
+    <script>
+      import '../motion/index.ts';
+    </script>
+  </body>
+</html>
+
+<style>
+  main:focus { outline: none; }
+
+  .draft-mode {
+    position: fixed;
+    right: max(var(--space-3), env(safe-area-inset-right, 0px));
+    bottom: max(var(--space-3), env(safe-area-inset-bottom, 0px));
+    z-index: 60;
+    margin: 0;
+    padding: var(--space-1) var(--space-2);
+    background: var(--draft);
+    color: var(--draft-fg);
+    pointer-events: none;
+  }
+</style>

@@ -1,0 +1,90 @@
+---
+// Media pendiente. Solo aparece en local y en la vista previa: en producción,
+// un bloque sin imagen simplemente no se muestra.
+// Usa una imagen abstracta (no un gris) para poder juzgar los efectos.
+import { Picture } from 'astro:assets';
+import type { Lang } from '../../i18n/routes';
+import { ui } from '../../i18n/ui';
+import { placeholderFor } from '../../lib/placeholders';
+
+interface Props {
+  lang: Lang;
+  aspect?: string;
+  note?: string;
+  kind?: 'image' | 'video';
+  class?: string;
+  sizes?: string;
+  /** Se dibuja con WebGL (efectos de scroll y hover). */
+  gl?: boolean;
+}
+
+const { lang, aspect = '16/9', note = '', kind = 'image', class: className, sizes = '(min-width: 72rem) 46vw, 92vw', gl = true } =
+  Astro.props;
+const t = ui(lang);
+const image = placeholderFor(note || aspect);
+const label = `${t.mediaPending}${note ? `: ${note}` : ''}`;
+---
+
+<div class:list={['placeholder', className]} style={`--ratio: ${aspect}`} data-gl-media={gl ? '' : undefined} data-placeholder>
+  <Picture
+    src={image}
+    alt={label}
+    formats={['webp']}
+    widths={[480, 768, 1080, 1600]}
+    sizes={sizes}
+    loading="lazy"
+    decoding="async"
+    class="ph-img"
+  />
+  <p class="tag label" aria-hidden="true">
+    {kind === 'video' && <span class="play" />}
+    {t.mediaPending} · {kind === 'video' ? 'video' : 'img'}
+  </p>
+</div>
+
+<style>
+  .placeholder {
+    position: relative;
+    aspect-ratio: var(--ratio);
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    background: var(--surface-2);
+  }
+
+  .placeholder :global(picture),
+  .placeholder :global(img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .placeholder :global(img) {
+    object-fit: cover;
+  }
+
+  .tag {
+    position: absolute;
+    left: var(--space-3);
+    top: var(--space-3);
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-2);
+    background: rgb(0 0 0 / 0.55);
+    color: #fff;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    pointer-events: none;
+  }
+
+  .play {
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 4px 0 4px 7px;
+    border-color: transparent transparent transparent #fff;
+  }
+</style>

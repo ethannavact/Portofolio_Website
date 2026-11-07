@@ -1,0 +1,106 @@
+name: Videoclips
+published: true
+order: 90
+title:
+  es: Videoclips
+  en: Music videos
+tagline:
+  es: >-
+    Videoclips y contenido para artistas con mundos digitales, personajes y
+    efectos.
+  en: Music videos and artist content with digital worlds, characters and effects.
+intro:
+  es: >-
+    Construyo los mundos donde ocurre el video: una ciudad digital, un bosque
+    que crece con la voz de una artista, un set virtual sin pantalla verde.
+    Trabajo con el director y el artista para que el video tenga una identidad
+    visual propia y se pueda producir con el presupuesto real.
+
+
+    También acompaño a artistas que quieren hacer su propio video con estas
+    herramientas, desde la asesoría hasta los efectos finales.
+  en: >-
+    I build the worlds where the video happens: a digital city, a forest that
+    grows with an artist’s voice, a virtual set with no green screen. I work
+    with the director and the artist so the video has its own visual identity
+    and can be made on the real budget.
+
+
+    I also guide artists who want to make their own video with these tools, from
+    advice to final effects.
+fit:
+  - es: Un artista quiere un video imposible de grabar en una locación real.
+    en: An artist wants a video that could never be shot on a real location.
+  - es: Un director necesita un set virtual o un mundo digital para su idea.
+    en: A director needs a virtual set or a digital world for their idea.
+  - es: >-
+      Un lanzamiento necesita contenido visual que acompañe a la canción en
+      redes y en vivo.
+    en: A release needs visuals that carry the song on social and on stage.
+includes:
+  - title:
+      es: Diseño de mundos
+      en: World design
+    body:
+      es: Escenarios digitales a la medida de la canción.
+      en: Digital settings made for the song.
+  - title:
+      es: Producción virtual
+      en: Virtual production
+    body:
+      es: >-
+        Sets virtuales donde el artista se graba dentro del mundo, sin pantalla
+        verde.
+      en: >-
+        Virtual sets where the artist is filmed inside the world, with no green
+        screen.
+  - title:
+      es: Personajes y captura
+      en: Characters and capture
+    body:
+      es: Artistas digitalizados o avatares con movimiento real.
+      en: Digitized artists or avatars with real movement.
+  - title:
+      es: Efectos y post
+      en: Effects and post
+    body:
+      es: Simulaciones, composición y look final.
+      en: Simulations, compositing and final look.
+process:
+  - title:
+      es: Concepto
+      en: Concept
+    body:
+      es: La idea del video con el director y el artista.
+      en: The video idea with the director and artist.
+  - title:
+      es: Mundo
+      en: World
+    body:
+      es: Diseño y construcción del escenario.
+      en: Designing and building the setting.
+  - title:
+      es: Rodaje
+      en: Shoot
+    body:
+      es: Grabación o producción virtual.
+      en: Filming or virtual production.
+  - title:
+      es: Post
+      en: Post
+    body:
+      es: Efectos, color y entrega.
+      en: Effects, color and delivery.
+projects:
+  - santa-fe-klan-claves
+  - gera-mx-maria-becerra-extranandote
+  - hbo-vgly-season-2
+  - sail-away-cgi-music-video
+  - lex-la-llorona
+reviewNotes: >-
+  Copy provisional: se reescribe junto con la identidad (target: agencias y
+  marcas, sin jerga técnica).
+
+
+  Hoy solo HBO Vgly está publicado (concierto virtual dentro de una serie).
+  Publicar Santa Fe Klan o Gera MX fortalece este servicio.

@@ -1,0 +1,121 @@
+name: Activaciones y juegos
+published: true
+order: 40
+title:
+  es: Activaciones y juegos
+  en: Activations and games
+tagline:
+  es: >-
+    Juegos y dinámicas para eventos y festivales que la gente quiere jugar,
+    repetir y compartir.
+  en: >-
+    Games and experiences for events and festivals that people want to play,
+    replay and share.
+intro:
+  es: >-
+    Hago juegos de marca para stands, festivales y activaciones, desde la idea
+    hasta el juego terminado y funcionando en sitio. Se juegan con el cuerpo,
+    con controles físicos, con el celular o en realidad virtual, según lo que
+    pida el espacio.
+
+
+    Un buen juego de marca hace fila, se entiende en segundos y deja algo
+    medible: registros, datos, contenido o tiempo con la marca. La marca vive
+    dentro de la mecánica, más allá del logo en pantalla.
+  en: >-
+    I make brand games for booths, festivals and activations, from the idea to
+    the finished game running on site. They are played with the body, physical
+    controllers, a phone or VR, depending on the space.
+
+
+    A good brand game draws a line, is understood in seconds and leaves
+    something measurable: sign-ups, data, content or time with the brand. The
+    brand lives inside the mechanic, beyond the logo on screen.
+fit:
+  - es: >-
+      Tienes un stand o activación en un festival y necesitas algo que haga
+      fila.
+    en: >-
+      You have a booth or activation at a festival and need something that draws
+      a line.
+  - es: >-
+      La marca quiere registros o datos de su público a cambio de una
+      experiencia que valga la pena.
+    en: >-
+      The brand wants sign-ups or audience data in exchange for an experience
+      worth having.
+  - es: Buscas una competencia que la gente quiera grabar y subir.
+    en: You want a competition people will film and post.
+  - es: Necesitas una experiencia que funcione semanas en un stand itinerante.
+    en: You need an experience that runs for weeks on a touring booth.
+includes:
+  - title:
+      es: Concepto y mecánica
+      en: Concept and mechanic
+    body:
+      es: Qué se juega, cómo se gana y dónde entra la marca.
+      en: What you play, how you win and where the brand comes in.
+  - title:
+      es: Arte y personajes
+      en: Art and characters
+    body:
+      es: Diseño visual del juego alineado a la campaña.
+      en: The game’s visual design, aligned with the campaign.
+  - title:
+      es: Desarrollo completo
+      en: Full development
+    body:
+      es: El juego programado, probado y listo para operar en el evento.
+      en: The game built, tested and ready to run at the event.
+  - title:
+      es: Controles e instalación física
+      en: Controllers and hardware
+    body:
+      es: >-
+        Detección de movimiento, botones, tornamesas, plataformas o realidad
+        virtual.
+      en: Motion detection, buttons, turntables, platforms or VR.
+  - title:
+      es: Datos y premios
+      en: Data and prizes
+    body:
+      es: Registro de jugadores, marcadores y dinámica de ganadores.
+      en: Player sign-up, leaderboards and winner mechanics.
+process:
+  - title:
+      es: Mecánica
+      en: Mechanic
+    body:
+      es: Una idea de juego que se entienda en segundos.
+      en: A game idea understood in seconds.
+  - title:
+      es: Prototipo
+      en: Prototype
+    body:
+      es: Versión jugable temprana para probar diversión y tiempos.
+      en: An early playable version to test fun and timing.
+  - title:
+      es: Producción
+      en: Production
+    body:
+      es: Arte, programación y hardware.
+      en: Art, code and hardware.
+  - title:
+      es: Evento
+      en: Event
+    body:
+      es: Pruebas en sitio, operación y reporte de participación.
+      en: On-site testing, operation and a participation report.
+projects:
+  - fud-cheese-rush
+  - takis-coachella
+  - dj-silver-heineken
+  - viva-aerobus-airplane-game
+  - sesderma-dermajal
+  - taf-vr-world-cup
+  - resbalongo-ceremonia
+  - simbiosis-offf-mx
+  - amazon-music-duelo-de-titanes
+reviewNotes: >-
+  Copy provisional: se reescribe junto con la identidad (target: agencias y
+  marcas, sin jerga técnica).

@@ -1,0 +1,737 @@
+---
+// Ruleta de proyectos (mecánica de la referencia quynh.moe/work).
+//  · Centro: las portadas pasan en una tira vertical; sobre la del centro gira un tambor
+//    con la disciplina (izquierda) y el nombre corto (derecha) de cada proyecto.
+//  · Panel izquierdo: título y descripción del proyecto visible (cambian con un fundido).
+//  · Derecha: datos secundarios e indicador de scroll.
+// Sin JavaScript queda una lista de portadas enlazadas. La lógica vive en src/motion/ruleta.ts.
+import Media from './media/Media.astro';
+import { caseRoute, type Lang } from '../i18n/routes';
+import { pick, ui } from '../i18n/ui';
+import type { Project } from '../lib/projects';
+import { DISCIPLINES } from '../lib/taxonomy';
+import { splitTitle } from '../lib/titles';
+
+interface Props {
+  lang: Lang;
+  projects: Project[];
+  /** Prefijo único de ids. */
+  id: string;
+  title: string;
+  headingLevel?: 'h1' | 'h2';
+  /** Filtros por disciplina (página de Trabajo). */
+  filters?: { value: string; label: string }[];
+  /** Botón al final del panel (Home: «Todo el trabajo»). */
+  more?: { href: string; label: string };
+}
+
+const { lang, projects, id, title, headingLevel = 'h2', filters = [], more } = Astro.props;
+const t = ui(lang);
+const Heading = headingLevel;
+const label = (v: string) => DISCIPLINES.find((d) => d.value === v)?.[lang] ?? '';
+
+const rows = projects.map((p, i) => {
+  const d = p.data;
+  const full = pick(d.title, lang);
+  const { short, tagline } = splitTitle(full);
+  const kind = d.kind === 'concept' ? t.concept : d.kind === 'personal' ? t.personal : '';
+  return {
+    p,
+    full,
+    // Para el tambor y el panel (el JSON no lleva enlaces: el preview reescribe solo atributos).
+    info: {
+      short,
+      tagline,
+      summary: pick(d.summary, lang) || pick(d.oneLiner, lang),
+      client: d.client || kind,
+      year: d.year,
+      role: pick(d.role, lang),
+      status: pick(d.status, lang),
+      cat: label(d.disciplines[0] ?? '') || kind,
+    },
+    index: String(i + 1).padStart(2, '0'),
+  };
+});
+
+const first = rows[0]?.info;
+const json = JSON.stringify(rows.map((r) => r.info)).replace(/</g, '\\u003c');
+const count = (n: number) => (n === 1 ? t.resultsOne : t.resultsMany(n));
+const facts = [
+  { key: 'client', label: t.client },
+  { key: 'year', label: t.year },
+  { key: 'role', label: t.role },
+  { key: 'status', label: t.status },
+] as const;
+---
+
+{
+  rows.length > 0 && (
+    <section class="ruleta" id={id} data-ruleta aria-labelledby={`${id}-title`} style="--r-aspect: 4 / 3">
+      <div class="r-left">
+        <div class="r-panel">
+          <header class="r-head">
+            <Heading class="r-heading label" id={`${id}-title`}>
+              {title}
+            </Heading>
+            <p class="label r-count" data-ruleta-count data-one={t.resultsOne} data-many={t.resultsMany(0).replace('0', '{n}')}>
+              {count(rows.length)}
+            </p>
+          </header>
+
+          <div class="r-info" data-ruleta-info>
+            <p class="r-title">
+              <a href={caseRoute(rows[0].p.id, lang)} data-f="href" tabindex="-1">
+                <span data-f="short">{first.short}</span>
+              </a>
+            </p>
+            <p class="r-tagline" data-f="tagline" data-f-hide hidden={!first.tagline}>
+              {first.tagline}
+            </p>
+            <p class="r-desc" data-f="summary" data-f-hide hidden={!first.summary}>
+              {first.summary}
+            </p>
+            <p class="r-mfacts label" aria-hidden="true">
+              <span data-f="client">{first.client}</span> · <span data-f="year">{first.year}</span>
+            </p>
+            <a class="r-cta label" href={caseRoute(rows[0].p.id, lang)} data-f="href">
+              {t.viewCase} <span data-f="short" class="sr-only">{first.short}</span> <span aria-hidden="true">→</span>
+            </a>
+          </div>
+
+          {(filters.length > 0 || more) && (
+            <footer class="r-foot">
+              {filters.length > 0 && (
+                <div class="r-filters" role="group" aria-label={t.filterLabel} data-lenis-prevent>
+                  <button type="button" class="chip" aria-pressed="true" data-filter="all">
+                    {t.filterAll}
+                  </button>
+                  {filters.map((f) => (
+                    <button type="button" class="chip" aria-pressed="false" data-filter={f.value}>
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {more && (
+                <a class="btn r-more" href={more.href}>
+                  {more.label} <span aria-hidden="true">→</span>
+                </a>
+              )}
+            </footer>
+          )}
+        </div>
+      </div>
+
+      <div class="r-right">
+        <div class="r-stage" aria-hidden="true" data-ruleta-stage>
+          <p class="r-index label" data-ruleta-index>
+            01
+          </p>
+          <div class="r-drum">
+            <div class="r-drum-inner">
+              <ul class="r-col r-col--cat" role="list" data-drum-cat>
+                {rows.map((r) => (
+                  <li>{r.info.cat}</li>
+                ))}
+              </ul>
+              <div class="r-ruler" data-ruleta-ruler />
+              <ul class="r-col r-col--name" role="list" data-drum-name>
+                {rows.map((r) => (
+                  <li>{r.info.short}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <div class="r-facts">
+            <dl class="r-facts-list" data-ruleta-facts>
+              {facts.map((f) => (
+                <div class="r-fact" data-f-row={f.key} hidden={!first[f.key]}>
+                  <dt class="label">{f.label}</dt>
+                  <dd data-f={f.key}>{first[f.key]}</dd>
+                </div>
+              ))}
+            </dl>
+            <div class="r-progress">
+              <ol class="r-ticks" role="list" data-ruleta-ticks>
+                {rows.map((_, i) => (
+                  <li class:list={[i === 0 && 'is-active']} />
+                ))}
+              </ol>
+              <p class="label r-pos">
+                <span data-ruleta-pos>01</span> / <span data-ruleta-total>{String(rows.length).padStart(2, '0')}</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <ol class="r-list" role="list" data-ruleta-list>
+          {rows.map((r, i) => (
+            <li class="r-item" data-disciplines={r.p.data.disciplines.join(' ')}>
+              <a class="r-link" href={caseRoute(r.p.id, lang)}>
+                <span class="sr-only">
+                  {r.full}
+                  {r.info.client && `. ${r.info.client}`}
+                  {r.info.year && `, ${r.info.year}`}
+                </span>
+                <Media
+                  lang={lang}
+                  image={r.p.data.cover}
+                  alt=""
+                  aspect="var(--r-aspect)"
+                  crop
+                  sizes="(min-width: 64rem) 50vw, 92vw"
+                  eager={i === 0}
+                  note={r.p.data.coverNote}
+                  class="r-media"
+                />
+              </a>
+            </li>
+          ))}
+        </ol>
+      </div>
+      <script type="application/json" is:inline data-ruleta-json set:html={json} />
+    </section>
+  )
+}
+
+<style>
+  .ruleta {
+    --left-w: clamp(19rem, 29vw, 31rem);
+    --r-cols: minmax(0, 1fr);
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--gap);
+    padding-inline: max(var(--gap), env(safe-area-inset-left, 0px)) max(var(--gap), env(safe-area-inset-right, 0px));
+  }
+
+  /* ── Panel izquierdo ─────────────────────────────────────────── */
+  .r-left {
+    min-width: 0;
+  }
+
+  .r-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    padding: clamp(1.25rem, 0.9rem + 1vw, 2rem);
+    background: var(--surface);
+    border-radius: var(--radius);
+  }
+
+  .r-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+  }
+
+  .r-heading {
+    color: var(--fg);
+  }
+
+  .r-info {
+    display: grid;
+    align-content: center;
+    gap: var(--space-3);
+  }
+
+  .r-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.25rem, 1.3rem + 2.7vw, 4.4rem);
+    font-weight: var(--weight-bold);
+    line-height: 0.98;
+    letter-spacing: -0.038em;
+    text-wrap: balance;
+  }
+
+  .r-title a {
+    text-decoration: none;
+  }
+
+  .r-title a:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.12em;
+  }
+
+  .r-tagline {
+    max-width: 24ch;
+    font-family: var(--font-display);
+    font-size: var(--step-1);
+    font-weight: var(--weight-medium);
+    line-height: 1.25;
+    letter-spacing: -0.012em;
+  }
+
+  .r-tagline::first-letter {
+    text-transform: uppercase;
+  }
+
+  .r-desc {
+    max-width: 40ch;
+    color: var(--muted);
+  }
+
+  .r-mfacts {
+    display: none;
+  }
+
+  .r-cta {
+    justify-self: start;
+    margin-top: var(--space-2);
+    padding-block: var(--space-2);
+    color: var(--fg);
+    text-decoration: underline;
+    text-underline-offset: 0.35em;
+  }
+
+  .r-foot {
+    display: grid;
+    gap: var(--space-4);
+    justify-items: start;
+  }
+
+  .r-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    justify-self: stretch;
+    min-width: 0;
+  }
+
+  .chip {
+    min-height: 36px;
+    padding: 0 var(--space-3);
+    border: var(--border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    letter-spacing: var(--label-tracking);
+    text-transform: uppercase;
+    transition: background-color var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out),
+      border-color var(--dur-1) var(--ease-out);
+  }
+
+  .chip:hover {
+    border-color: var(--fg);
+  }
+
+  .chip[aria-pressed='true'] {
+    background: var(--fg);
+    border-color: var(--fg);
+    color: var(--surface);
+  }
+
+  /* El panel cambia con un fundido (lo maneja ruleta.ts con estas clases). */
+  .r-info,
+  .r-facts-list {
+    transition: opacity 0.22s var(--ease-out), filter 0.22s var(--ease-out), transform 0.22s var(--ease-out);
+  }
+
+  :global(.is-swapping).r-info,
+  :global(.is-swapping).r-facts-list {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(-6px);
+  }
+
+  /* ── Tira de portadas ────────────────────────────────────────── */
+  .r-right {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--r-cols);
+    min-width: 0;
+  }
+
+  .r-list {
+    grid-row: 1;
+    grid-column: 1;
+    display: grid;
+    gap: var(--gap);
+    margin: 0;
+  }
+
+  .r-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .r-link {
+    display: block;
+    width: var(--box-w, 100%);
+    max-width: 100%;
+    text-decoration: none;
+  }
+
+  .r-link:focus-visible {
+    outline-offset: 4px;
+  }
+
+  /* Escenario fijo: tambor, índice, datos e indicador. Solo con JS. */
+  .r-stage {
+    display: none;
+  }
+
+  /* ── Con JavaScript: la ruleta ───────────────────────────────── */
+  .ruleta:global(.is-live) .r-list {
+    gap: 0;
+    padding-top: var(--pad-top, 0px);
+    padding-bottom: var(--pad-bottom, 0px);
+  }
+
+  .ruleta:global(.is-live) .r-item {
+    height: var(--slot-h, auto);
+  }
+
+  .ruleta:global(.is-live) .r-item[hidden] {
+    display: none;
+  }
+
+  .ruleta:global(.is-live) .r-stage {
+    grid-row: 1;
+    grid-column: 1 / -1;
+    position: sticky;
+    top: var(--stick-top);
+    z-index: 2;
+    display: grid;
+    grid-template-columns: var(--r-cols);
+    align-self: start;
+    height: var(--stage-h);
+    pointer-events: none;
+  }
+
+  .r-index {
+    position: absolute;
+    top: var(--space-3);
+    left: var(--space-3);
+    z-index: 1;
+    margin: 0;
+    color: #fff;
+    text-shadow: 0 0 10px rgb(0 0 0 / 0.5);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .r-drum {
+    grid-column: 1;
+    position: relative;
+    min-width: 0;
+  }
+
+  .r-drum-inner {
+    position: absolute;
+    top: var(--focus-y, 50%);
+    left: 50%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 1.5rem minmax(0, 1fr);
+    align-items: stretch;
+    column-gap: 0.75rem;
+    width: calc(var(--box-w, 100%) - 1.5rem);
+    height: 11.5rem;
+    transform: translate(-50%, -50%);
+    perspective: 520px;
+    color: #fff;
+  }
+
+  /* Velo sutil detrás del tambor: los nombres se leen sobre cualquier portada. */
+  .r-drum-inner::before {
+    content: '';
+    position: absolute;
+    inset: -1.5rem -1rem;
+    z-index: -1;
+    background: radial-gradient(closest-side, rgb(26 9 2 / 0.36), rgb(26 9 2 / 0));
+  }
+
+  .r-col {
+    position: relative;
+    margin: 0;
+    transform-style: preserve-3d;
+  }
+
+  .r-col li {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    margin-top: -0.6em;
+    overflow: hidden;
+    font-family: var(--font-display);
+    font-size: clamp(0.875rem, 0.8rem + 0.25vw, 1.05rem);
+    font-weight: var(--weight-medium);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-shadow: 0 1px 2px rgb(0 0 0 / 0.35), 0 0 16px rgb(0 0 0 / 0.35);
+    backface-visibility: hidden;
+    will-change: transform, opacity;
+  }
+
+  .r-col li:global(.is-active) {
+    font-weight: var(--weight-bold);
+  }
+
+  .r-col--cat li {
+    text-align: right;
+  }
+
+  .r-ruler {
+    position: relative;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(transparent, #000 28%, #000 72%, transparent);
+    mask-image: linear-gradient(transparent, #000 28%, #000 72%, transparent);
+  }
+
+  .r-ruler::before {
+    content: '';
+    position: absolute;
+    inset: -2rem 0.4rem;
+    background: repeating-linear-gradient(to bottom, rgb(255 255 255 / 0.75) 0 1px, transparent 1px 9px);
+    transform: translateY(var(--tick-shift, 0px));
+  }
+
+  .r-ruler::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    margin-top: -1px;
+    background: #fff;
+    box-shadow: 0 0 8px rgb(0 0 0 / 0.35);
+  }
+
+  .r-facts {
+    display: none;
+  }
+
+  .r-progress {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--space-3);
+  }
+
+  .r-ticks {
+    display: grid;
+    gap: 5px;
+    margin: 0;
+  }
+
+  .r-ticks li {
+    width: 10px;
+    height: 1px;
+    background: var(--line);
+    transition: width var(--dur-2) var(--ease-out), background-color var(--dur-2) var(--ease-out);
+  }
+
+  .r-ticks li:global(.is-active) {
+    width: 22px;
+    background: var(--fg);
+  }
+
+  .r-ticks li[hidden] {
+    display: none;
+  }
+
+  .r-pos {
+    margin: 0;
+    color: var(--fg);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* ── Teléfono y tablet: panel abajo, fijo sobre la tira ───────── */
+  @media (max-width: 63.99rem) {
+    .ruleta {
+      --r-aspect: 1 / 1 !important;
+    }
+
+    /* Tira y panel comparten la celda: el panel se queda fijo abajo mientras pasa la tira. */
+    .ruleta:global(.is-live) .r-right {
+      grid-row: 1;
+      grid-column: 1;
+    }
+
+    .r-drum-inner {
+      column-gap: 0.5rem;
+    }
+
+    .r-col li {
+      font-size: 0.8125rem;
+    }
+
+    .r-left {
+      grid-row: 1;
+      grid-column: 1;
+      align-self: end;
+      position: sticky;
+      bottom: max(var(--gap), env(safe-area-inset-bottom, 0px));
+      z-index: 3;
+    }
+
+    .ruleta:not(:global(.is-live)) .r-left {
+      position: static;
+      grid-row: auto;
+    }
+
+    .r-panel {
+      gap: var(--space-3);
+      padding: var(--space-4);
+      box-shadow: 0 10px 30px rgb(26 9 2 / 0.12);
+    }
+
+    /* El título de la sección sigue ahí para lectores de pantalla. */
+    .ruleta:global(.is-live) .r-head {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
+    .r-index {
+      display: none;
+    }
+
+
+    .r-info {
+      gap: var(--space-1);
+    }
+
+    .r-title {
+      font-size: var(--step-3);
+    }
+
+    .r-tagline,
+    .r-desc {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      overflow: hidden;
+      font-size: var(--step-0);
+    }
+
+    .r-desc {
+      display: none;
+    }
+
+    .r-mfacts {
+      display: block;
+      margin-top: var(--space-1);
+    }
+
+    .r-cta {
+      margin-top: 0;
+    }
+
+    .r-foot {
+      order: -1;
+      gap: var(--space-3);
+    }
+
+    .r-filters {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      margin-inline: calc(-1 * var(--space-4));
+      padding-inline: var(--space-4);
+      scrollbar-width: none;
+    }
+
+    .r-filters::-webkit-scrollbar {
+      display: none;
+    }
+
+    .chip {
+      flex: none;
+    }
+
+    .r-more {
+      min-height: 40px;
+    }
+
+    .ruleta:global(.is-live) .r-foot:has(.r-more):not(:has(.r-filters)) {
+      order: 1;
+    }
+  }
+
+  /* ── Escritorio: dos paneles, como la referencia ─────────────── */
+  @media (min-width: 64rem) {
+    .ruleta {
+      --r-cols: 3.5rem minmax(0, 1fr) clamp(10.5rem, 13vw, 14rem);
+      grid-template-columns: var(--left-w) minmax(0, 1fr);
+    }
+
+    .r-panel {
+      position: sticky;
+      top: var(--stick-top);
+      justify-content: space-between;
+      min-height: var(--stage-h);
+    }
+
+    .ruleta:global(.is-live) .r-panel {
+      height: var(--stage-h);
+    }
+
+    .r-right {
+      column-gap: var(--space-4);
+    }
+
+    .r-list {
+      grid-column: 2;
+    }
+
+    .r-index {
+      position: static;
+      grid-column: 1;
+      grid-row: 1;
+      align-self: start;
+      margin-top: calc(var(--focus-y, 50%) - 0.7em);
+      color: var(--fg);
+      text-shadow: none;
+    }
+
+    .r-drum {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .ruleta:global(.is-live) .r-facts {
+      grid-column: 3;
+      grid-row: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: var(--space-5);
+      padding-block: var(--space-2);
+      min-width: 0;
+    }
+
+    .r-facts-list {
+      display: grid;
+      gap: var(--space-4);
+    }
+
+    .r-fact {
+      display: grid;
+      gap: var(--space-1);
+      padding-top: var(--space-2);
+      border-top: var(--border);
+    }
+
+    .r-fact dd {
+      font-size: var(--step--1);
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+
+    .r-fact[hidden] {
+      display: none;
+    }
+  }
+</style>

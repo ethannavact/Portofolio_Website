@@ -1,0 +1,746 @@
+---
+// Página de un caso (mecánica de la referencia): a la izquierda un panel fijo con el
+// título y el texto del capítulo visible; a la derecha, la media en retícula. Al bajar,
+// el texto cambia con un fundido según el capítulo que pasa por el centro de la pantalla.
+// En teléfono todo queda en orden de lectura: texto, su media, el siguiente texto…
+// La lógica vive en src/motion/case.ts; los capítulos se arman en src/lib/chapters.ts.
+import { isRemote, ogImage as toOg } from '../lib/images';
+import Base from '../layouts/Base.astro';
+import Media from '../components/media/Media.astro';
+import VideoEmbed from '../components/media/VideoEmbed.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import ChapterText from '../components/ChapterText.astro';
+import { caseAlternates, caseRoute, contactRoute, route, serviceRoute, type Lang } from '../i18n/routes';
+import { pick, ui } from '../i18n/ui';
+import { getProjects, nextProject, type Project } from '../lib/projects';
+import { breadcrumbLd, caseLd } from '../lib/seo';
+import { plain, richInline } from '../lib/rich';
+import { DISCIPLINES } from '../lib/taxonomy';
+import { SHOW_DRAFTS } from '../lib/env';
+import { servicesFor } from '../lib/services';
+import { buildChapters, type ChapterMedia } from '../lib/chapters';
+import { splitTitle } from '../lib/titles';
+
+interface Props {
+  lang: Lang;
+  project: Project;
+}
+
+const { lang, project } = Astro.props;
+const t = ui(lang);
+const d = project.data;
+const base = Astro.site ?? new URL(Astro.url.origin);
+const title = pick(d.title, lang);
+const { short, tagline } = splitTitle(title);
+const oneLiner = pick(d.oneLiner, lang) || pick(d.summary, lang);
+const description = plain(pick(d.seoDescription, lang) || pick(d.summary, lang) || oneLiner, 160);
+const url = new URL(caseRoute(project.id, lang), base).href;
+
+const list = await getProjects();
+const next = nextProject(list, project);
+// Proyectos similares (los calcula el estudio por disciplinas, tags y cliente).
+const related = d.related
+  .map((slug) => list.find((p) => p.id === slug))
+  .filter((p): p is Project => Boolean(p) && p!.id !== next?.id)
+  .slice(0, 3);
+
+const kindLabel = d.kind === 'concept' ? t.concept : d.kind === 'personal' ? t.personal : '';
+const disciplines = d.disciplines.map((v) => DISCIPLINES.find((x) => x.value === v)?.[lang]).filter(Boolean);
+const services = await servicesFor(project);
+const meta = [
+  { label: t.client, value: d.client },
+  { label: t.agency, value: d.agency },
+  { label: t.studio, value: d.studio },
+  { label: t.year, value: d.year },
+  { label: t.role, value: pick(d.role, lang) },
+  { label: t.status, value: pick(d.status, lang) },
+  { label: t.disciplines, value: disciplines.join(' · ') },
+].filter((m) => m.value);
+
+const hasHeroVideo = d.heroVideo.provider !== 'none' && Boolean(d.heroVideo.id || d.heroVideo.url);
+const intro: ChapterMedia[] = hasHeroVideo
+  ? [{ kind: 'video', video: d.heroVideo, caption: '', note: '' }]
+  : d.cover || SHOW_DRAFTS
+    ? [{ kind: 'image', image: d.cover, alt: pick(d.coverAlt, lang) || title, caption: '', note: d.coverNote }]
+    : [];
+const { chapters, groups } = buildChapters(d.blocks, lang, intro);
+// La parada del capítulo inicial dura lo suficiente para que se lea al abrir la página.
+chapters[0].words = Math.max(90, [oneLiner, ...meta.map((m) => m.value)].join(' ').split(/\s+/).length);
+const total = chapters.length;
+const pad = (n: number) => String(n).padStart(2, '0');
+
+const sources = d.sources.filter((s) => s.url);
+const credits = d.credits.filter((c) => c.name);
+
+/** Proporción real (ancho/alto) de una pieza, para que la primera de cada grupo no se recorte. */
+const ratio = (m: ChapterMedia) => {
+  if (m.kind === 'image' && isRemote(m.image)) return m.image.width / m.image.height;
+  if (m.kind === 'video') {
+    const [w, h] = String(m.video.aspect || '16/9').split('/').map(Number);
+    return w && h ? w / h : 16 / 9;
+  }
+  return 16 / 9;
+};
+/** Primera pieza a todo lo ancho; después de a dos (si sobra una al final, también a lo ancho). */
+const spanOf = (media: ChapterMedia[], i: number) =>
+  i === 0 || media[i].kind === 'video' || (i === media.length - 1 && (media.length - 1) % 2 === 1) ? 'full' : 'half';
+
+let ogImageUrl: string | undefined;
+if (d.cover) ogImageUrl = new URL((await toOg(d.cover)).src, base).href;
+---
+
+<Base
+  lang={lang}
+  title={title}
+  description={description}
+  alternates={caseAlternates(project.id)}
+  current="work"
+  type="article"
+  image={d.cover}
+  imageAlt={pick(d.coverAlt, lang)}
+  noindex={!d.published}
+  jsonLd={[
+    caseLd(project, lang, url, ogImageUrl, base),
+    breadcrumbLd([
+      { name: t.home, url: new URL(route('home', lang), base).href },
+      { name: t.workTitle, url: new URL(route('work', lang), base).href },
+      { name: title, url },
+    ]),
+  ]}
+>
+  <article class="case" data-case>
+    <div class="case-grid">
+      <div class="c-left">
+        <div class="c-panel">
+          <div class="c-top">
+            <nav class="crumbs label" aria-label={t.breadcrumb}>
+              <a href={route('work', lang)}><span aria-hidden="true">← </span>{t.workTitle}</a>
+            </nav>
+            {
+              total > 1 && (
+                <p class="label c-pos" aria-hidden="true">
+                  <span data-case-pos>01</span> / {pad(total)}
+                </p>
+              )
+            }
+          </div>
+
+          <header class="c-head">
+            <p class="label eyebrow">
+              {d.client && <span>{d.client}</span>}
+              {d.year && <span>{d.year}</span>}
+              {kindLabel && <span class="badge">{kindLabel}</span>}
+              {!d.published && SHOW_DRAFTS && <span class="badge badge--draft">{t.draft}</span>}
+            </p>
+            <h1 class="c-title">
+              <span class="c-short">{short}</span>{tagline && <span class="sr-only">: </span>}
+              {tagline && <span class="c-tagline">{tagline}</span>}
+            </h1>
+          </header>
+
+          <div class="c-chapters" data-chapters>
+            {
+              chapters.map((c, i) => (
+                <section
+                  class:list={['c-chapter', i === 0 && 'is-active', i > 0 && 'c-chapter--desk']}
+                  data-chapter={i}
+                  aria-label={i > 0 ? t.chapterOf(i + 1, total) : undefined}
+                >
+                  {i === 0 ? (
+                    <Fragment>
+                      {oneLiner && <p class="c-lead" set:html={richInline(oneLiner)} />}
+                      {meta.length > 0 && (
+                        <dl class="c-meta">
+                          {meta.map((m) => (
+                            <div class="c-meta-row">
+                              <dt class="label">{m.label}</dt>
+                              <dd>{m.value}</dd>
+                            </div>
+                          ))}
+                          {services.length > 0 && (
+                            <div class="c-meta-row">
+                              <dt class="label">{t.servicesInCase}</dt>
+                              <dd>
+                                {services.map((s, k) => (
+                                  <Fragment>
+                                    {k > 0 && <span aria-hidden="true"> · </span>}
+                                    <a href={serviceRoute(s.id, lang)}>{pick(s.data.title, lang)}</a>
+                                  </Fragment>
+                                ))}
+                              </dd>
+                            </div>
+                          )}
+                        </dl>
+                      )}
+                    </Fragment>
+                  ) : (
+                    <ChapterText chapter={c} />
+                  )}
+                </section>
+              ))
+            }
+          </div>
+
+          {
+            total > 1 && (
+              <ol class="c-ticks" role="list" aria-hidden="true" data-case-ticks>
+                {chapters.map((_, i) => (
+                  <li class:list={[i === 0 && 'is-active']} />
+                ))}
+              </ol>
+            )
+          }
+        </div>
+      </div>
+
+      <div class="c-right">
+        {
+          groups.map((g) => (
+            <div class="c-group">
+              {g.chapters[0] > 0 && (
+                <div class="c-mtext">
+                  <ChapterText chapter={chapters[g.chapters[0]]} />
+                </div>
+              )}
+              {g.media.length > 0 && (
+                <div class="c-media" data-group-media>
+                  {g.media.map((m, i) => {
+                    const span = spanOf(g.media, i);
+                    const lead = i === 0 && g.chapters[0] === 0;
+                    return (
+                      <Fragment>
+                        {m.label && <p class="label c-glabel">{m.label}</p>}
+                        <figure class:list={['c-fig', `c-fig--${span}`]} style={`--ar: ${ratio(m).toFixed(4)}`}>
+                          {m.kind === 'video' ? (
+                            <VideoEmbed lang={lang} video={m.video} fallbackTitle={title} note={m.note} eager={lead} />
+                          ) : (
+                            <Media
+                              lang={lang}
+                              image={m.image}
+                              alt={m.alt || title}
+                              aspect={span === 'half' ? m.aspect || '4/3' : '16/9'}
+                              crop={span === 'half' || !isRemote(m.image)}
+                              eager={lead}
+                              note={m.note}
+                              sizes={span === 'full' ? '(min-width: 64rem) 64vw, 92vw' : '(min-width: 64rem) 32vw, 92vw'}
+                              transitionName={lead && m.image === d.cover ? `cover-${project.id}` : undefined}
+                            />
+                          )}
+                          {m.caption && <figcaption class="c-caption" set:html={richInline(m.caption)} />}
+                        </figure>
+                      </Fragment>
+                    );
+                  })}
+                </div>
+              )}
+              {g.chapters.slice(1).map((ci) => (
+                <div class="c-mtext">
+                  <ChapterText chapter={chapters[ci]} />
+                </div>
+              ))}
+              <div class="c-slots" aria-hidden="true">
+                {g.chapters.map((ci) => (
+                  <div class="c-slot" data-slot={ci} style={`--w: ${Math.max(chapters[ci].words, 20)}`} />
+                ))}
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+
+    {
+      (d.stack.length > 0 || d.tags.length > 0 || sources.length > 0 || credits.length > 0) && (
+        <section class="wrap grid bts" aria-labelledby="bts-title">
+          <h2 class="label bts-title" id="bts-title">
+            {t.behindTheScenes}
+          </h2>
+          <div class="bts-body">
+            {d.stack.length > 0 && (
+              <div class="bts-row">
+                <h3 class="label">{t.stack}</h3>
+                <p>{d.stack.join(' · ')}</p>
+              </div>
+            )}
+            {credits.length > 0 && (
+              <div class="bts-row">
+                <h3 class="label">{t.credits}</h3>
+                <dl class="credits">
+                  {credits.map((c) => (
+                    <div>
+                      <dt>{pick(c.role, lang)}</dt>
+                      <dd>{c.name}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            )}
+            {d.tags.length > 0 && (
+              <div class="bts-row">
+                <h3 class="label">{t.tags}</h3>
+                <ul class="tag-list" role="list">
+                  {d.tags.map((tag) => (
+                    <li>{tag}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {sources.length > 0 && (
+              <div class="bts-row">
+                <h3 class="label">{t.press}</h3>
+                <ul class="source-list" role="list">
+                  {sources.map((s) => (
+                    <li>
+                      <a href={s.url} target="_blank" rel="noopener">
+                        {s.label || s.url}
+                        <span class="sr-only"> {t.opensNewTab}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </section>
+      )
+    }
+
+    <footer class="wrap case-foot">
+      {
+        next && (
+          <div class="next">
+            <p class="label">{t.nextCase}</p>
+            <ProjectCard lang={lang} project={next} headingLevel="h2" />
+          </div>
+        )
+      }
+      <div class="cta">
+        <p class="title-m">{t.caseCta}</p>
+        <a class="btn btn--solid" href={contactRoute(lang)}>{t.getInTouch}</a>
+      </div>
+      {
+        related.length > 0 && (
+          <div class="related">
+            <h2 class="label">{t.relatedCases}</h2>
+            <div class="related-grid">
+              {related.map((p) => (
+                <ProjectCard lang={lang} project={p} headingLevel="h3" aspect="4/3" />
+              ))}
+            </div>
+          </div>
+        )
+      }
+    </footer>
+  </article>
+</Base>
+
+<style>
+  .case {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(var(--space-8), 6vw, var(--space-9));
+    padding-bottom: var(--section);
+  }
+
+  .case-grid {
+    display: grid;
+    gap: var(--gap);
+    padding-top: var(--gap);
+    padding-inline: max(var(--gap), env(safe-area-inset-left, 0px)) max(var(--gap), env(safe-area-inset-right, 0px));
+  }
+
+  /* ── Panel izquierdo ─────────────────────────────────────────── */
+  .c-left {
+    min-width: 0;
+  }
+
+  .c-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    padding: clamp(1.25rem, 0.9rem + 1vw, 2rem);
+    background: var(--surface);
+    border-radius: var(--radius);
+  }
+
+  .c-top {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+
+  .crumbs a {
+    color: var(--fg);
+    text-decoration: none;
+  }
+
+  .crumbs a:hover {
+    text-decoration: underline;
+  }
+
+  .c-pos {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .c-head {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .eyebrow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    color: var(--fg);
+  }
+
+  .badge {
+    border: var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0 var(--space-2);
+  }
+
+  .badge--draft {
+    border-color: var(--draft);
+    color: var(--draft);
+  }
+
+  .c-title {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .c-short {
+    font-size: clamp(2.25rem, 1.3rem + 2.6vw, 4.25rem);
+    line-height: 0.98;
+    letter-spacing: -0.038em;
+  }
+
+  .c-tagline {
+    max-width: 26ch;
+    font-size: var(--step-1);
+    font-weight: var(--weight-medium);
+    line-height: 1.25;
+    letter-spacing: -0.012em;
+  }
+
+  .c-tagline::first-letter {
+    text-transform: uppercase;
+  }
+
+  .c-chapters {
+    display: grid;
+    gap: var(--space-7);
+  }
+
+  .c-chapter {
+    display: grid;
+    align-content: start;
+    gap: var(--space-4);
+    min-width: 0;
+  }
+
+  .c-lead {
+    max-width: 40ch;
+    font-size: var(--step-1);
+    line-height: 1.4;
+  }
+
+  .c-meta {
+    display: grid;
+  }
+
+  .c-meta-row {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    gap: var(--space-1) var(--space-4);
+    padding-block: var(--space-2);
+    border-top: var(--border);
+    line-height: 1.5;
+  }
+
+  .c-meta-row:last-child {
+    border-bottom: var(--border);
+  }
+
+  .c-meta-row dd {
+    font-size: 0.875rem;
+  }
+
+  .c-ticks {
+    display: flex;
+    gap: 6px;
+    margin: 0;
+  }
+
+  .c-ticks li {
+    flex: 1;
+    max-width: 2.5rem;
+    height: 2px;
+    background: var(--line);
+    transition: background-color var(--dur-2) var(--ease-out);
+  }
+
+  .c-ticks li:global(.is-active) {
+    background: var(--fg);
+  }
+
+  /* ── Media ───────────────────────────────────────────────────── */
+  .c-right {
+    display: grid;
+    gap: var(--space-5);
+    min-width: 0;
+  }
+
+  .c-group {
+    display: grid;
+    gap: var(--space-5);
+    min-width: 0;
+  }
+
+  .c-media {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--gap);
+    align-content: start;
+  }
+
+  .c-glabel {
+    grid-column: 1 / -1;
+    margin: var(--space-3) 0 0;
+  }
+
+  .c-fig {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+    min-width: 0;
+  }
+
+  .c-fig--full {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: min(100%, calc(var(--stage-h) * var(--ar, 1.7778)));
+  }
+
+  .c-caption {
+    font-size: var(--step--1);
+    color: var(--muted);
+  }
+
+  .c-slots {
+    display: none;
+  }
+
+  .c-mtext {
+    padding: var(--space-5) clamp(var(--space-4), 2vw, var(--space-5));
+    background: var(--surface);
+    border-radius: var(--radius);
+  }
+
+  /* Los capítulos del panel solo existen en escritorio; en teléfono van entre la media. */
+  .c-chapter--desk {
+    display: none;
+  }
+
+  /* ── Escritorio ──────────────────────────────────────────────── */
+  @media (min-width: 64rem) {
+    .case-grid {
+      grid-template-columns: clamp(20rem, 32vw, 34rem) minmax(0, 1fr);
+    }
+
+    .c-panel {
+      position: sticky;
+      top: var(--stick-top);
+      min-height: var(--stage-h);
+    }
+
+    .c-chapter--desk {
+      display: grid;
+    }
+
+    .c-mtext {
+      display: none;
+    }
+
+    .c-right,
+    .c-group {
+      gap: var(--gap);
+    }
+
+    /* Con JS: panel del alto de la ventana y un capítulo a la vez. */
+    .case:global(.is-synced) .c-panel {
+      height: var(--stage-h);
+    }
+
+    .case:global(.is-synced) .c-chapters {
+      flex: 1 1 auto;
+      min-height: 0;
+      gap: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+    }
+
+    .case:global(.is-synced) .c-chapter {
+      grid-area: 1 / 1;
+      opacity: 0;
+      filter: blur(6px);
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: opacity 0.35s var(--ease-out), filter 0.35s var(--ease-out), transform 0.5s var(--ease-out);
+    }
+
+    .case:global(.is-synced) .c-chapter:global(.is-active),
+    .case:global(.is-synced) .c-chapter:focus-within {
+      opacity: 1;
+      filter: none;
+      transform: none;
+      pointer-events: auto;
+    }
+
+    /* Cada grupo: su media queda fija mientras pasan sus capítulos («paradas»). */
+    .case:global(.is-synced) .c-group {
+      grid-template-areas: 'stack';
+    }
+
+    .case:global(.is-synced) .c-media,
+    .case:global(.is-synced) .c-slots {
+      grid-area: stack;
+    }
+
+    .case:global(.is-synced) .c-media {
+      position: sticky;
+      top: var(--stick-top);
+      align-self: start;
+      z-index: 1;
+    }
+
+    .case:global(.is-synced) .c-slots {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .c-slot {
+      flex: var(--w) 1 0;
+      min-height: clamp(36svh, calc(var(--w) * 0.5svh + 18svh), 70svh);
+    }
+  }
+
+  /* ── Detrás de cámara y pie del caso ─────────────────────────── */
+  .bts {
+    row-gap: var(--space-5);
+    padding-top: var(--space-6);
+    border-top: var(--border);
+  }
+
+  .bts-title,
+  .bts-body {
+    grid-column: 1 / -1;
+  }
+
+  .bts-body {
+    display: grid;
+    gap: var(--space-6);
+  }
+
+  .bts-row {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .credits {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .credits div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-3);
+  }
+
+  .credits dt {
+    color: var(--muted);
+  }
+
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .tag-list li {
+    border: var(--border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-1) var(--space-3);
+    font-size: var(--step--1);
+  }
+
+  .source-list {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  @media (min-width: 56rem) {
+    .bts-title {
+      grid-column: 1 / span 4;
+    }
+
+    .bts-body {
+      grid-column: 5 / -1;
+    }
+  }
+
+  .case-foot {
+    display: grid;
+    gap: var(--space-8);
+  }
+
+  .related {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: var(--space-5);
+    padding-top: var(--space-7);
+    border-top: var(--border);
+  }
+
+  .related-grid {
+    display: grid;
+    gap: var(--space-6) var(--gutter);
+  }
+
+  @media (min-width: 48rem) {
+    .related-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .next {
+    display: grid;
+    gap: var(--space-4);
+    max-width: 44rem;
+  }
+
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-5);
+    padding: clamp(var(--space-6), 4vw, var(--space-8));
+    background: var(--surface);
+    border-radius: var(--radius);
+  }
+
+  .cta p {
+    max-width: 28ch;
+  }
+
+  @media (min-width: 64rem) {
+    .case-foot {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: end;
+    }
+  }
+</style>

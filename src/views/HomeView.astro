@@ -1,0 +1,379 @@
+---
+import { imageUrl } from '../lib/images';
+import Base from '../layouts/Base.astro';
+import Ruleta from '../components/Ruleta.astro';
+import ContactList from '../components/ContactList.astro';
+import ReelHero from '../components/ReelHero.astro';
+import GenerativeLayer from '../components/GenerativeLayer.astro';
+import { alternatesFor, contactRoute, route, serviceRoute, type Lang } from '../i18n/routes';
+import { pick, ui } from '../i18n/ui';
+import { getAbout, getFeatured, getSite } from '../lib/projects';
+import { personLd, websiteLd } from '../lib/seo';
+import { placeholderFor } from '../lib/placeholders';
+import { SHOW_DRAFTS } from '../lib/env';
+import { examplesFor, getServices } from '../lib/services';
+import { plain, rich } from '../lib/rich';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = ui(lang);
+const site = await getSite();
+const about = await getAbout();
+const featured = await getFeatured(12);
+const services = await getServices();
+const base = Astro.site ?? new URL(Astro.url.origin);
+
+const brands = about.clientGroups[0]?.names ?? [];
+const description = plain(pick(site.seoDescription, lang) || pick(site.heroIntro, lang), 160);
+const hasReel = site.reel.provider !== 'none' && Boolean(site.reel.id || site.reel.url || site.reel.poster);
+
+// Vista previa (junto al cursor) de cada servicio: la portada de su primer ejemplo.
+const serviceMedia = await Promise.all(
+  services.map(async (s) => {
+    const first = (await examplesFor(s))[0];
+    const img = first?.data.cover ?? (first && SHOW_DRAFTS ? placeholderFor(first.data.coverNote || pick(first.data.title, lang)) : undefined);
+    return img ? { preview: await imageUrl(img, 768, { quality: 78 }) } : {};
+  }),
+);
+---
+
+<Base
+  lang={lang}
+  title={site.name}
+  description={description}
+  alternates={alternatesFor('home')}
+  current="home"
+  type="profile"
+  jsonLd={[personLd(site, about, lang, base), websiteLd(site, lang, base)]}
+>
+  {hasReel && <ReelHero lang={lang} site={site} />}
+
+  <section class="statement" aria-labelledby="hero-title">
+    {site.generativeLayer && <GenerativeLayer />}
+    <div class="wrap grid statement-inner">
+      <h1 class="display statement-title" id="hero-title" data-scrub-words>{pick(site.heroLine, lang)}</h1>
+      <div class="statement-side" data-reveal-group>
+        <div class="lead" set:html={rich(pick(site.heroIntro, lang))} />
+        <div class="actions">
+          <a class="btn btn--solid" href={route('work', lang)}>{t.seeWork}</a>
+          <a class="btn" href={contactRoute(lang)}>{t.getInTouch}</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {
+    brands.length > 0 && (
+      <section class="clients" aria-labelledby="clients-title">
+        <div class="wrap">
+          <h2 class="label clients-title" id="clients-title">
+            {t.clientsLabel}
+          </h2>
+        </div>
+        <div class="client-marquee" data-marquee>
+          <ul class="client-list" role="list">
+            {brands.map((b) => (
+              <li>{b}</li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+
+  <div class="work">
+    <Ruleta
+      lang={lang}
+      projects={featured}
+      id="trabajo-seleccionado"
+      title={t.selectedWork}
+      more={{ href: route('work', lang), label: t.allWork }}
+    />
+  </div>
+
+  {
+    services.length > 0 && (
+      <section class="section services" aria-labelledby="services-title">
+        <div class="wrap grid">
+          <div class="services-head">
+            <h2 class="title-l" id="services-title" data-reveal="lines">
+              {t.whatIDo}
+            </h2>
+            <a href={route('services', lang)} class="more" data-reveal>
+              {t.allServices} →
+            </a>
+          </div>
+          <ul class="service-list" role="list" data-reveal-group>
+            {services.map((s, i) => (
+              <li class="service" data-preview-src={serviceMedia[i]?.preview}>
+                <h3 class="service-name">
+                  <a class="service-link" href={serviceRoute(s.id, lang)}>
+                    {pick(s.data.title, lang)}
+                  </a>
+                </h3>
+                <p class="service-body muted">{pick(s.data.tagline, lang)}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+
+  {
+    site.modes.length > 0 && (
+      <section class="section modes" aria-labelledby="modes-title">
+        <div class="wrap">
+          <p class="label section-label">{t.agencies}</p>
+          <h2 class="title-l" id="modes-title" data-reveal="lines">
+            {t.agenciesTitle}
+          </h2>
+          <ol class="mode-list" role="list" data-reveal-group>
+            {site.modes.map((m, i) => (
+              <li class="mode">
+                <span class="label">{String(i + 1).padStart(2, '0')}</span>
+                <h3 class="mode-name">{pick(m.title, lang)}</h3>
+                <p class="muted">{pick(m.body, lang)}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+    )
+  }
+
+  <section class="cta" aria-labelledby="cta-title">
+    <div class="wrap cta-inner">
+      <h2 class="title-xl" id="cta-title" data-reveal="lines">{pick(site.ctaTitle, lang)}</h2>
+      <div class="cta-contact">
+        <ContactList lang={lang} site={site} id="cta" />
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .statement {
+    position: relative;
+    isolation: isolate;
+    padding-block: clamp(var(--space-8), 9vw, var(--space-10)) var(--space-8);
+  }
+
+  .statement-inner {
+    position: relative;
+    z-index: 1;
+    row-gap: var(--space-6);
+  }
+
+  .statement-title,
+  .statement-side {
+    grid-column: 1 / -1;
+  }
+
+  .statement-title {
+    max-width: 18ch;
+  }
+
+  .statement-side {
+    display: grid;
+    gap: var(--space-5);
+    align-content: start;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  @media (min-width: 64rem) {
+    .statement-title {
+      grid-column: 1 / span 10;
+    }
+
+    .statement-side {
+      grid-column: 7 / -1;
+    }
+  }
+
+  .section-label {
+    margin-bottom: var(--space-4);
+  }
+
+
+  .clients {
+    border-block: var(--border);
+    padding-block: var(--space-6);
+  }
+
+  .clients-title {
+    margin-bottom: var(--space-4);
+  }
+
+  .client-marquee {
+    padding-inline: max(var(--margin), env(safe-area-inset-left, 0px));
+    max-width: var(--max);
+    margin-inline: auto;
+  }
+
+  .client-marquee:global(.is-marquee) {
+    max-width: none;
+    padding-inline: 0;
+  }
+
+  .client-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) clamp(var(--space-5), 3vw, var(--space-7));
+    font-family: var(--font-display);
+    font-size: var(--step-1);
+    font-weight: var(--weight-medium);
+    letter-spacing: -0.01em;
+  }
+
+  .services {
+    border-top: var(--border);
+    padding-top: var(--section);
+  }
+
+  .services-head,
+  .service-list {
+    grid-column: 1 / -1;
+  }
+
+  .services-head {
+    display: grid;
+    align-content: start;
+    justify-items: start;
+    gap: var(--space-3);
+    margin-bottom: var(--space-6);
+  }
+
+  .service {
+    position: relative;
+  }
+
+  .service-link {
+    text-decoration: none;
+  }
+
+  .service-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  .service:hover .service-link {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+
+  .service-link:focus-visible {
+    outline: none;
+  }
+
+  .service:has(.service-link:focus-visible) {
+    outline: 2px solid var(--focus);
+    outline-offset: 4px;
+  }
+
+  .service-list {
+    display: grid;
+  }
+
+  .service {
+    display: grid;
+    gap: var(--space-2) var(--gutter);
+    padding-block: var(--space-5);
+    border-top: var(--border);
+  }
+
+  .service:last-child {
+    border-bottom: var(--border);
+  }
+
+  @media (min-width: 64rem) {
+    .service {
+      grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    }
+
+    .service-body {
+      grid-column: 2;
+    }
+  }
+
+  .service-name,
+  .mode-name {
+    font-size: var(--step-1);
+  }
+
+  @media (min-width: 64rem) {
+    .services-head {
+      grid-column: 1 / span 4;
+    }
+
+    .service-list {
+      grid-column: 5 / -1;
+    }
+  }
+
+  .modes .title-l {
+    margin-bottom: var(--space-6);
+  }
+
+  .mode-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+    gap: var(--gutter);
+  }
+
+  .mode {
+    display: grid;
+    gap: var(--space-3);
+    align-content: start;
+    padding: clamp(var(--space-5), 2.5vw, var(--space-6));
+    background: var(--surface);
+    border-radius: var(--radius);
+  }
+
+  /* Los títulos largos saltan de línea sin reducir la tipografía. */
+  .mode-name {
+    overflow-wrap: break-word;
+    hyphens: manual;
+  }
+
+  .work {
+    padding-block: var(--space-6) var(--section);
+  }
+
+  .cta {
+    margin-inline: var(--gap);
+    padding-block: var(--section);
+    background: var(--surface);
+    border-radius: var(--radius);
+  }
+
+  .cta-inner {
+    display: grid;
+    gap: var(--space-7) var(--gutter);
+    align-items: end;
+  }
+
+  .cta h2 {
+    max-width: 16ch;
+  }
+
+  .cta-contact {
+    min-width: 0;
+  }
+
+  @media (min-width: 64rem) {
+    .cta-inner {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    }
+  }
+</style>

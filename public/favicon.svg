@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <style>
+    rect { fill: #141414; }
+    text { fill: #f2f2ef; }
+    @media (prefers-color-scheme: dark) { rect { fill: #ececea; } text { fill: #0f0f10; } }
+  </style>
+  <rect width="64" height="64"/>
+  <text x="32" y="41" text-anchor="middle" font-family="ui-sans-serif, system-ui, Helvetica, Arial, sans-serif" font-size="26" font-weight="700" letter-spacing="-1">EN</text>
+</svg>

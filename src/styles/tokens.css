@@ -1,0 +1,94 @@
+/* ═══════════════════════════════════════════════════════════════
+   TOKENS DE DISEÑO — el contrato entre el branding y el sitio.
+
+   Tema claro único, tomado de la referencia (quynh.moe): fondo cálido
+   gris-arena, paneles casi blancos, tinta café muy oscura y etiquetas en
+   monoespaciada. Para cambiar la identidad solo se reemplazan los valores
+   de este archivo (y las fuentes en Base.astro).
+
+   Regla: ningún componente usa colores, fuentes, tamaños o tiempos
+   literales. Si falta un token, se agrega aquí.
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Color ──────────────────────────────────────────── BRAND ── */
+  --bg: #f1edea;          /* fondo de página */
+  --surface: #fef9f5;     /* paneles claros: info de la ruleta, texto del caso, tarjetas */
+  --surface-2: #e6e1de;   /* marcadores de media, rellenos */
+  --line: #d8d0cb;        /* divisores y bordes */
+  --fg: #1a0902;          /* tinta */
+  --muted: #6b605b;       /* texto secundario (≥ 4.5:1 sobre --bg y --surface) */
+  --accent: #1a0902;      /* acento de marca (provisional = tinta) */
+  --accent-fg: #fef9f5;   /* texto sobre el acento */
+  --focus: #1d4ed8;       /* anillo de foco (accesibilidad) */
+  --draft: #9a4507;       /* señal de borrador (solo local) */
+  --draft-fg: #ffffff;
+  --scrim: rgb(26 9 2 / 0.55);
+
+  color-scheme: light;
+
+  /* ── Tipografía ─────────────────────────────────────── BRAND ── */
+  /* Provisionales (Google Fonts): Inter Tight en lugar de Helvetica Now Display. */
+  --font-display: 'Inter Tight', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-body: 'Inter Tight', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-bold: 600;
+  --display-tracking: -0.028em;
+  --label-tracking: 0.02em;
+
+  /* Escala fluida (de 360 px a 1600 px de ancho) */
+  --step--1: clamp(0.6875rem, 0.67rem + 0.08vw, 0.75rem);
+  --step-0: clamp(0.9688rem, 0.94rem + 0.12vw, 1.0625rem);
+  --step-1: clamp(1.1875rem, 1.1rem + 0.35vw, 1.4rem);
+  --step-2: clamp(1.4rem, 1.22rem + 0.8vw, 2rem);
+  --step-3: clamp(1.75rem, 1.4rem + 1.55vw, 3rem);
+  --step-4: clamp(2.25rem, 1.65rem + 2.7vw, 4.5rem);
+  --step-5: clamp(2.75rem, 1.8rem + 4.2vw, 6.75rem);
+
+  --leading-tight: 1;
+  --leading-snug: 1.12;
+  --leading-body: 1.55;
+  --measure: 66ch;
+
+  /* ── Espacio (retícula base de 8 px) ───────────────────────── */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-9: 6rem;
+  --space-10: 8rem;
+  --section: clamp(4rem, 3rem + 5vw, 8rem);
+
+  /* ── Retícula (12 columnas) ─────────────────────────────────── */
+  --cols: 12;
+  --gutter: clamp(1rem, 0.7rem + 1.2vw, 1.5rem);
+  --margin: clamp(1rem, 0.2rem + 3.4vw, 4.5rem);
+  --max: 1680px;
+  /* Separación entre paneles (como el marco de la referencia). */
+  --gap: clamp(6px, 0.2rem + 0.3vw, 10px);
+
+  /* ── Forma ──────────────────────────────────────────── BRAND ── */
+  --radius: 8px;
+  --radius-sm: 6px;
+  --border: 1px solid var(--line);
+
+  /* ── Movimiento ─────────────────────────────────────── BRAND ── */
+  --dur-1: 160ms;
+  --dur-2: 320ms;
+  --dur-3: 700ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* Alto del header: el real lo mide Header.astro (--header-real). */
+  --header-h: 3.5rem;
+  --stick-top: calc(var(--header-real, var(--header-h)) + var(--gap));
+  /* Escenario de la ruleta y del caso: la ventana menos el header y el marco. */
+  --stage-h: calc(100svh - var(--stick-top) - var(--gap));
+}

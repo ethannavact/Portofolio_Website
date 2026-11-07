@@ -1,0 +1,81 @@
+---
+import type { AnyImage } from '../../lib/images';
+import Media from '../media/Media.astro';
+import type { Lang } from '../../i18n/routes';
+import { pick } from '../../i18n/ui';
+import { richInline } from '../../lib/rich';
+
+interface Props {
+  lang: Lang;
+  value: {
+    heading: { es: string; en: string };
+    steps: {
+      title: { es: string; en: string };
+      body: { es: string; en: string };
+      image?: AnyImage;
+      alt: { es: string; en: string };
+      note: string;
+    }[];
+  };
+}
+
+const { lang, value } = Astro.props;
+const heading = pick(value.heading, lang);
+const steps = value.steps.filter((s) => pick(s.title, lang));
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+
+{
+  steps.length > 0 && (
+    <div class="wrap process">
+      {heading && <h2 class="label process-heading">{heading}</h2>}
+      <ol class="steps" role="list">
+        {steps.map((step, i) => (
+          <li class="step">
+            <span class="num label" aria-hidden="true">
+              {pad(i + 1)}
+            </span>
+            <h3 class="step-title">{pick(step.title, lang)}</h3>
+            {pick(step.body, lang) && <p class="step-body" set:html={richInline(pick(step.body, lang))} />}
+            {(step.image || step.note) && (
+              <Media lang={lang} image={step.image} alt={pick(step.alt, lang)} aspect="4/3" crop note={step.note} sizes="(min-width: 56rem) 24vw, 92vw" class="step-media" />
+            )}
+          </li>
+        ))}
+      </ol>
+    </div>
+  )
+}
+
+<style>
+  .process-heading {
+    margin-bottom: var(--space-5);
+  }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+    gap: var(--space-6) var(--gutter);
+    counter-reset: step;
+  }
+
+  .step {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding-top: var(--space-4);
+    border-top: var(--border);
+  }
+
+  .step-title {
+    font-size: var(--step-1);
+  }
+
+  .step-body {
+    color: var(--muted);
+  }
+
+  .step :global(.step-media) {
+    margin-top: var(--space-3);
+  }
+</style>

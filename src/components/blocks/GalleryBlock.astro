@@ -1,0 +1,216 @@
+---
+import type { AnyImage } from '../../lib/images';
+import Media from '../media/Media.astro';
+import type { Lang } from '../../i18n/routes';
+import { pick, ui } from '../../i18n/ui';
+import { richInline } from '../../lib/rich';
+import { SHOW_DRAFTS } from '../../lib/env';
+
+type Item = {
+  image?: AnyImage;
+  alt: { es: string; en: string };
+  caption: { es: string; en: string };
+  note: string;
+};
+
+interface Props {
+  lang: Lang;
+  value: {
+    heading: { es: string; en: string };
+    layout: 'grid-2' | 'grid-3' | 'carousel' | 'stack';
+    aspect: string;
+    items: Item[];
+  };
+}
+
+const { lang, value } = Astro.props;
+const t = ui(lang);
+const heading = pick(value.heading, lang);
+const items = value.items.filter((i) => i.image || SHOW_DRAFTS);
+const isCarousel = value.layout === 'carousel';
+const crop = value.layout !== 'stack';
+const sizes =
+  value.layout === 'grid-3'
+    ? '(min-width: 56rem) 31vw, 92vw'
+    : value.layout === 'grid-2'
+      ? '(min-width: 40rem) 46vw, 92vw'
+      : value.layout === 'carousel'
+        ? '(min-width: 56rem) 60vw, 84vw'
+        : '(min-width: 1680px) 1560px, 92vw';
+---
+
+{
+  items.length > 0 && (
+    <div class:list={['gallery', `gallery--${value.layout}`]}>
+      {heading && (
+        <div class="wrap">
+          <h2 class="label gallery-heading">
+            {heading}
+          </h2>
+        </div>
+      )}
+
+      {isCarousel ? (
+        <div class="carousel" data-carousel>
+          <div class="track" role="region" tabindex="0" aria-roledescription={t.carousel} aria-label={heading || t.carousel} data-gl-clip data-lenis-prevent>
+            {items.map((item, i) => (
+              <div class="slide" role="group" aria-roledescription={t.slide} aria-label={t.slideOf(i + 1, items.length)}>
+                <figure>
+                  <Media lang={lang} image={item.image} alt={pick(item.alt, lang)} aspect={value.aspect} crop note={item.note} sizes={sizes} />
+                  {pick(item.caption, lang) && <figcaption class="caption" set:html={richInline(pick(item.caption, lang))} />}
+                </figure>
+              </div>
+            ))}
+          </div>
+          <div class="wrap controls">
+            <button type="button" class="nav-btn" data-dir="-1" aria-label={t.carouselPrev}>
+              <span aria-hidden="true">←</span>
+            </button>
+            <button type="button" class="nav-btn" data-dir="1" aria-label={t.carouselNext}>
+              <span aria-hidden="true">→</span>
+            </button>
+            <p class="label counter" aria-hidden="true">
+              <span data-current>1</span> / {items.length}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <ul class="wrap items" role="list">
+          {items.map((item) => (
+            <li>
+              <figure>
+                <Media lang={lang} image={item.image} alt={pick(item.alt, lang)} aspect={value.aspect} crop={crop} note={item.note} sizes={sizes} />
+                {pick(item.caption, lang) && <figcaption class="caption" set:html={richInline(pick(item.caption, lang))} />}
+              </figure>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-carousel]').forEach((root) => {
+    const track = root.querySelector<HTMLElement>('.track');
+    const slides = Array.from(root.querySelectorAll<HTMLElement>('.slide'));
+    const counter = root.querySelector<HTMLElement>('[data-current]');
+    const prev = root.querySelector<HTMLButtonElement>('[data-dir="-1"]');
+    const next = root.querySelector<HTMLButtonElement>('[data-dir="1"]');
+    if (!track || !slides.length) return;
+
+    const currentIndex = () => {
+      const left = track.scrollLeft + 1;
+      let index = 0;
+      slides.forEach((s, i) => {
+        if (s.offsetLeft - slides[0].offsetLeft <= left) index = i;
+      });
+      return index;
+    };
+
+    const update = () => {
+      const i = currentIndex();
+      if (counter) counter.textContent = String(i + 1);
+      if (prev) prev.disabled = track.scrollLeft <= 2;
+      if (next) next.disabled = track.scrollLeft + track.clientWidth >= track.scrollWidth - 2;
+    };
+
+    const go = (dir: number) => {
+      const i = Math.min(slides.length - 1, Math.max(0, currentIndex() + dir));
+      const reduce = document.documentElement.dataset.motion === 'off';
+      track.scrollTo({ left: slides[i].offsetLeft - slides[0].offsetLeft, behavior: reduce ? 'auto' : 'smooth' });
+    };
+
+    prev?.addEventListener('click', () => go(-1));
+    next?.addEventListener('click', () => go(1));
+    track.addEventListener('scroll', () => requestAnimationFrame(update), { passive: true });
+    track.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') { e.preventDefault(); go(1); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
+    });
+    update();
+  });
+</script>
+
+<style>
+  .gallery-heading {
+    margin-bottom: var(--space-5);
+  }
+
+  .items {
+    display: grid;
+    gap: var(--gutter);
+  }
+
+  .gallery--grid-2 .items {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  }
+
+  .gallery--grid-3 .items {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  }
+
+  .gallery--stack .items {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--space-6);
+  }
+
+  .caption {
+    margin-top: var(--space-2);
+    font-size: var(--step--1);
+    color: var(--muted);
+  }
+
+  /* Carrusel: scroll nativo con snap; los botones solo ayudan. */
+  .track {
+    display: flex;
+    gap: var(--gutter);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding-left: max(var(--margin), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--margin), env(safe-area-inset-right, 0px));
+    scroll-padding-left: max(var(--margin), env(safe-area-inset-left, 0px));
+  }
+
+  .track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .slide {
+    flex: 0 0 min(84vw, 60rem);
+    scroll-snap-align: start;
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+  }
+
+  .nav-btn {
+    width: 48px;
+    height: 48px;
+    border: var(--border);
+    border-radius: var(--radius);
+    background: transparent;
+    font-size: var(--step-1);
+    transition: border-color var(--dur-1) var(--ease-out), opacity var(--dur-1) var(--ease-out);
+  }
+
+  .nav-btn:hover:not(:disabled) {
+    border-color: var(--fg);
+  }
+
+  .nav-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  .counter {
+    margin-left: var(--space-3);
+    font-variant-numeric: tabular-nums;
+  }
+</style>

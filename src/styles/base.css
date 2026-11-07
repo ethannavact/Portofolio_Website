@@ -1,0 +1,263 @@
+/* Base global: reset, tipografía, contenedores y accesibilidad.
+   Los estilos de cada componente viven en su propio archivo .astro. */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-top: calc(var(--header-h) + var(--space-4));
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+  line-height: var(--leading-body);
+  font-weight: var(--weight-regular);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: clip;
+}
+
+h1, h2, h3, h4, p, figure, blockquote, dl, dd, ol, ul { margin: 0; }
+ol, ul { padding: 0; }
+ul[role='list'], ol[role='list'] { list-style: none; }
+img, video, svg, canvas, iframe { display: block; max-width: 100%; }
+img, video { height: auto; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+[hidden] { display: none !important; }
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-snug);
+  letter-spacing: var(--display-tracking);
+  text-wrap: balance;
+}
+
+p, li, dd { text-wrap: pretty; }
+
+a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  transition: color var(--dur-1) var(--ease-out), text-decoration-color var(--dur-1) var(--ease-out);
+}
+a:hover { text-decoration-color: var(--muted); }
+
+::selection { background: var(--accent); color: var(--accent-fg); }
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+/* ── Contenedores ─────────────────────────────────────────────── */
+.wrap {
+  width: 100%;
+  max-width: var(--max);
+  margin-inline: auto;
+  padding-left: max(var(--margin), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--margin), env(safe-area-inset-right, 0px));
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  column-gap: var(--gutter);
+}
+
+.section { padding-block: var(--section); }
+.section + .section { padding-top: 0; }
+
+/* ── Tipos de texto reutilizables ─────────────────────────────── */
+.label {
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  font-weight: var(--weight-regular);
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.display {
+  font-size: var(--step-5);
+  line-height: var(--leading-tight);
+  font-weight: var(--weight-bold);
+}
+
+.title-xl { font-size: var(--step-4); line-height: 1.04; }
+.title-l { font-size: var(--step-3); line-height: 1.08; }
+.title-m { font-size: var(--step-2); line-height: 1.15; }
+.lead { font-size: var(--step-1); line-height: 1.45; max-width: 46ch; }
+.muted { color: var(--muted); }
+
+.prose { max-width: var(--measure); }
+.prose > * + * { margin-top: 1em; }
+.prose ul, .prose ol { padding-left: 1.2em; }
+.prose li + li { margin-top: 0.4em; }
+
+/* ── Botones ──────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 48px;
+  padding: 0 var(--space-5);
+  border: 1px solid var(--fg);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--fg);
+  font-size: var(--step-0);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  transition: background-color var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out);
+}
+.btn:hover { background: var(--fg); color: var(--bg); }
+.btn--solid { background: var(--fg); color: var(--bg); }
+.btn--solid:hover { background: transparent; color: var(--fg); }
+
+/* ── Paneles (como la referencia): tarjetas claras con esquinas de 8 px ── */
+.panel {
+  background: var(--surface);
+  border-radius: var(--radius);
+}
+
+/* ── Accesibilidad ────────────────────────────────────────────── */
+.sr-only {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Franja del área segura superior (notch, apps a pantalla completa):
+   el contenido no se asoma por encima del header fijo. Mide 0 en un navegador normal. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 51;
+  height: env(safe-area-inset-top, 0px);
+  background: var(--bg);
+}
+
+.skip-link {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + var(--space-2));
+  left: max(var(--space-4), env(safe-area-inset-left, 0px));
+  z-index: 100;
+  padding: var(--space-3) var(--space-4);
+  background: var(--fg);
+  color: var(--bg);
+  transform: translateY(-200%);
+}
+.skip-link:focus { transform: none; }
+
+/* ── Movimiento ───────────────────────────────────────────────────
+   La coreografía vive en src/motion (GSAP + Lenis + WebGL). Aquí solo:
+   estados iniciales, la capa WebGL y las reglas para "movimiento apagado". */
+
+/* Lo que entra animado espera a la capa de movimiento (ver el script del <head>). */
+.motion-js [data-reveal],
+.motion-js [data-reveal-group] > * {
+  opacity: 0;
+}
+
+/* Capa WebGL: un canvas fijo detrás de todo el contenido. */
+.gl-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.gl-stage canvas {
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.9s var(--ease-out);
+}
+
+.gl-on .gl-stage canvas { opacity: 1; }
+.gl-on body { background: transparent; }
+
+body > :not(.gl-stage) { position: relative; z-index: 1; }
+body > .skip-link { position: fixed; z-index: 100; }
+body > .site-header { position: sticky; z-index: 50; }
+body > .draft-mode { position: fixed; z-index: 60; }
+
+/* Imágenes que dibuja WebGL: el <img> sigue ahí (accesible), solo se oculta. */
+[data-gl-media].is-gl,
+.gl-on .media:has(.is-gl) { background: transparent !important; }
+[data-gl-media].is-gl img { opacity: 0; }
+.gl-snapshot [data-gl-media].is-gl img { opacity: 1; }
+
+/* Scroll suave (Lenis). */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: clip; }
+.lenis.lenis-smooth iframe { pointer-events: none; }
+.lenis.lenis-smooth dialog iframe { pointer-events: auto; }
+
+/* Transiciones entre páginas: la vieja se desenfoca, la nueva entra a foco. */
+@view-transition { navigation: auto; }
+
+@keyframes page-out {
+  to { opacity: 0; filter: blur(16px); transform: scale(1.015); }
+}
+@keyframes page-in {
+  from { opacity: 0; filter: blur(16px); transform: scale(0.99); }
+}
+
+::view-transition-old(root) { animation: page-out 0.45s var(--ease-in-out) both; }
+::view-transition-new(root) { animation: page-in 0.8s var(--ease-out) both; }
+
+::view-transition-group(*) {
+  animation-duration: 0.9s;
+  animation-timing-function: var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
+}
+
+:root[data-motion='off'] *,
+:root[data-motion='off'] *::before,
+:root[data-motion='off'] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+:root[data-motion='off']::view-transition-group(*),
+:root[data-motion='off']::view-transition-old(*),
+:root[data-motion='off']::view-transition-new(*) {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-motion='off']):not(.lenis) { scroll-behavior: smooth; }
+}
+
+/* Marquee de clientes (lo arma src/motion/scroll.ts). */
+.is-marquee { overflow: hidden; }
+.is-marquee .marquee-track { display: flex; width: max-content; will-change: transform; }
+.is-marquee .marquee-track > ul { flex-wrap: nowrap !important; padding-right: clamp(var(--space-5), 3vw, var(--space-7)); }
+.is-marquee .marquee-track > ul > li { white-space: nowrap; }

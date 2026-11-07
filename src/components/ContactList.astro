@@ -1,0 +1,175 @@
+---
+// Datos de contacto (correo, teléfono y redes) con botón de copiar.
+// Los enlaces mailto:/tel: son una comodidad: el dato siempre se ve y se puede copiar.
+import type { Lang } from '../i18n/routes';
+import { ui } from '../i18n/ui';
+import type { SiteData } from '../lib/projects';
+import { formatPhone, socialHandle, telHref } from '../lib/contact';
+
+interface Props {
+  lang: Lang;
+  site: SiteData;
+  /** Prefijo único para los ids (puede haber varias listas en la página). */
+  id: string;
+  size?: 'large' | 'small';
+}
+
+const { lang, site, id, size = 'large' } = Astro.props;
+const t = ui(lang);
+const socials = site.socials.filter((s) => s.url);
+const phone = site.phone.trim();
+---
+
+<div class:list={['contact', `contact--${size}`]} data-contact>
+  <dl class="rows">
+    {
+      site.email && (
+        <div class="row">
+          <dt class="label">{t.email}</dt>
+          <dd>
+            <a class="value" href={`mailto:${site.email}`} id={`${id}-email`}>
+              {site.email}
+            </a>
+            <button type="button" class="copy label" data-copy-text={site.email} data-copy-target={`${id}-email`} data-ok={t.copied} data-fail={t.copyFail}>
+              {t.copy}
+            </button>
+          </dd>
+        </div>
+      )
+    }
+    {
+      phone && (
+        <div class="row">
+          <dt class="label">{t.phone}</dt>
+          <dd>
+            <a class="value" href={telHref(phone)} id={`${id}-phone`}>
+              {formatPhone(phone)}
+            </a>
+            <button type="button" class="copy label" data-copy-text={phone} data-copy-target={`${id}-phone`} data-ok={t.copiedPhone} data-fail={t.copyFail}>
+              {t.copy}
+            </button>
+          </dd>
+        </div>
+      )
+    }
+    {
+      socials.map((s) => (
+        <div class="row">
+          <dt class="label">{s.label}</dt>
+          <dd>
+            <a class="value" href={s.url} target="_blank" rel="noopener me">
+              {socialHandle(s.url)} <span aria-hidden="true">↗</span>
+              <span class="sr-only"> {t.opensNewTab}</span>
+            </a>
+          </dd>
+        </div>
+      ))
+    }
+  </dl>
+  <p class="status label" role="status" aria-live="polite" data-copy-status></p>
+</div>
+
+<script>
+  // Un solo manejador para todas las listas de la página.
+  document.addEventListener('click', async (event) => {
+    const button = (event.target as Element | null)?.closest<HTMLButtonElement>('[data-copy-text]');
+    if (!button) return;
+    const status = button.closest('[data-contact]')?.querySelector<HTMLElement>('[data-copy-status]');
+    try {
+      await navigator.clipboard.writeText(button.dataset.copyText ?? '');
+      if (status) status.textContent = button.dataset.ok ?? '';
+    } catch {
+      // Sin portapapeles: se selecciona el dato para copiarlo a mano.
+      const target = document.getElementById(button.dataset.copyTarget ?? '');
+      if (target) {
+        const range = document.createRange();
+        range.selectNodeContents(target);
+        const sel = window.getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+      }
+      if (status) status.textContent = button.dataset.fail ?? '';
+    }
+  });
+</script>
+
+<style>
+  .contact {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .rows {
+    display: grid;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: minmax(6.5rem, auto) minmax(0, 1fr);
+    align-items: baseline;
+    gap: var(--space-2) var(--space-4);
+    padding-block: var(--space-3);
+    border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  }
+
+  .row:last-child {
+    border-bottom: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  }
+
+  dd {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+    min-width: 0;
+  }
+
+  .value {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+
+  .value:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+
+  .contact--large .value {
+    font-size: var(--step-2);
+    font-weight: var(--weight-medium);
+    line-height: 1.15;
+  }
+
+  .contact--small .value {
+    font-size: var(--step-0);
+  }
+
+  .copy {
+    min-height: 36px;
+    padding: 0 var(--space-3);
+    border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: inherit;
+    transition: border-color var(--dur-1) var(--ease-out);
+  }
+
+  .copy:hover {
+    border-color: currentColor;
+  }
+
+  .status {
+    min-height: 1.4em;
+    color: var(--muted);
+  }
+
+  @media (max-width: 30rem) {
+    .row {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

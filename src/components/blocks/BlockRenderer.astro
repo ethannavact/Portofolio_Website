@@ -1,0 +1,52 @@
+---
+// Arma la página de un caso a partir de sus bloques, en el orden del editor.
+import TextBlock from './TextBlock.astro';
+import ImageBlock from './ImageBlock.astro';
+import VideoBlock from './VideoBlock.astro';
+import GalleryBlock from './GalleryBlock.astro';
+import SplitBlock from './SplitBlock.astro';
+import StatsBlock from './StatsBlock.astro';
+import ProcessBlock from './ProcessBlock.astro';
+import ListBlock from './ListBlock.astro';
+import QuoteBlock from './QuoteBlock.astro';
+import type { Lang } from '../../i18n/routes';
+import { isRenderable, type Block } from '../../lib/projects';
+
+interface Props {
+  lang: Lang;
+  blocks: Block[];
+  projectTitle: string;
+}
+
+const { lang, blocks, projectTitle } = Astro.props;
+const visible = blocks.filter(isRenderable);
+---
+
+<div class="blocks">
+  {
+    visible.map((block) => (
+      <section
+        class:list={['block', `block--${block.discriminant}`]}
+        data-reveal={['image', 'gallery', 'video'].includes(block.discriminant) ? undefined : 'fade'}
+      >
+        {block.discriminant === 'text' && <TextBlock lang={lang} value={block.value} />}
+        {block.discriminant === 'image' && <ImageBlock lang={lang} value={block.value} />}
+        {block.discriminant === 'video' && <VideoBlock lang={lang} value={block.value} projectTitle={projectTitle} />}
+        {block.discriminant === 'gallery' && <GalleryBlock lang={lang} value={block.value} />}
+        {block.discriminant === 'split' && <SplitBlock lang={lang} value={block.value} />}
+        {block.discriminant === 'stats' && <StatsBlock lang={lang} value={block.value} />}
+        {block.discriminant === 'process' && <ProcessBlock lang={lang} value={block.value} />}
+        {block.discriminant === 'list' && <ListBlock lang={lang} value={block.value} />}
+        {block.discriminant === 'quote' && <QuoteBlock lang={lang} value={block.value} />}
+      </section>
+    ))
+  }
+</div>
+
+<style>
+  .blocks {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(var(--space-8), 7vw, var(--space-10));
+  }
+</style>

@@ -1,0 +1,84 @@
+name: Ethan Nava
+jobTitle:
+  es: Creative Director & Creative Technologist
+  en: Creative Director & Creative Technologist
+location:
+  es: Ciudad de México
+  en: Mexico City
+heroLine:
+  es: Mundos en tiempo real para marcas, artistas y espacios.
+  en: Real-time worlds for brands, artists and spaces.
+heroIntro:
+  es: >-
+    Dirección de arte y dirección técnica en tiempo real: de Houdini a Unreal
+    Engine 5, de un pitch a una instalación phygital. Shows en vivo, juegos para
+    activaciones y experiencias inmersivas desde la Ciudad de México.
+  en: >-
+    Art direction and real-time technical direction: from Houdini to Unreal
+    Engine 5, from a pitch to a phygital installation. Live shows, activation
+    games and immersive experiences from Mexico City.
+email: ethan.nava.mdt@gmail.com
+phone: '+525530602263'
+availability: {}
+socials:
+  - label: Instagram
+    url: https://www.instagram.com/ethan_nava/
+reel:
+  provider: youtube
+  id: BVS_rGpnNzs
+  title:
+    es: Reel de Ethan Nava
+    en: Ethan Nava reel
+  poster: ../../assets/site/reel-poster.jpg
+  posterAlt:
+    es: Escenario virtual en forma de estrella rosa con bailarines, de DJ Silver.
+    en: A pink star-shaped virtual stage with dancers, from DJ Silver.
+modes:
+  - title:
+      es: Dirección creativa y de arte
+      en: Creative and art direction
+    body:
+      es: >-
+        Desarrollo conceptos a partir de un brief o doy forma visual a una idea
+        de tu equipo. Defino el tono y el lenguaje visual para que la
+        experiencia se sienta propia de la marca.
+      en: >-
+        I develop concepts from a brief or give visual shape to an idea from
+        your team. I set the tone and visual language so the experience feels
+        true to the brand.
+  - title:
+      es: Diseño de experiencias interactivas
+      en: Interactive experience design
+    body:
+      es: >-
+        Diseño qué hace el público y cómo responde la experiencia. Cuando hace
+        falta probar una interacción antes de producirla, construyo un prototipo
+        o una demo funcional.
+      en: >-
+        I design what the audience does and how the experience responds. When an
+        interaction needs testing before production, I build a prototype or a
+        working demo.
+  - title:
+      es: Producción 3D y dirección técnica
+      en: 3D production and technical direction
+    body:
+      es: >-
+        Produzco visuales 3D, VFX y contenido en tiempo real. Según el alcance,
+        coordino artistas y acompaño la integración técnica hasta el montaje.
+      en: >-
+        I produce 3D visuals, VFX and real-time content. Depending on the scope,
+        I coordinate artists and see the technical integration through to
+        installation.
+ctaTitle:
+  es: ¿Tienes un pitch, un show o una activación en puerta?
+  en: Got a pitch, a show or an activation coming up?
+seoDescription:
+  es: >-
+    Ethan Nava, Creative Director y Creative Technologist en la Ciudad de
+    México. Shows en vivo, juegos, experiencias inmersivas y VFX en tiempo real
+    con Houdini y Unreal Engine 5.
+  en: >-
+    Ethan Nava, Creative Director and Creative Technologist in Mexico City. Live
+    shows, games, immersive experiences and real-time VFX with Houdini and
+    Unreal Engine 5.
+generativeLayer: false

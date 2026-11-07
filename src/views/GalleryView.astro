@@ -1,0 +1,310 @@
+---
+import { isRemote, pickVariant } from '../lib/images';
+import { getImage } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import Media from '../components/media/Media.astro';
+import { alternatesFor, caseRoute, route, type Lang } from '../i18n/routes';
+import { pick, ui } from '../i18n/ui';
+import { getGalleryItems } from '../lib/gallery';
+import { breadcrumbLd } from '../lib/seo';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = ui(lang);
+const base = Astro.site ?? new URL(Astro.url.origin);
+
+const items = await Promise.all(
+  (await getGalleryItems()).map(async (it) => {
+    const title = pick(it.project.data.title, lang);
+    const alt = pick(it.alt, lang) || title;
+    const full = !it.image
+      ? undefined
+      : isRemote(it.image)
+        ? (({ src, width, height }) => ({ src, attributes: { width, height } }))(pickVariant(it.image, 2560))
+        : await getImage({ src: it.image, width: Math.min(2560, it.image.width), format: 'webp' });
+    return { ...it, title, alt, caption: pick(it.caption, lang), full };
+  }),
+);
+const viewable = items.filter((i) => i.full).length;
+---
+
+<Base
+  lang={lang}
+  title={t.galleryTitle}
+  description={t.galleryIntro}
+  alternates={alternatesFor('gallery')}
+  current="gallery"
+  jsonLd={[
+    breadcrumbLd([
+      { name: t.home, url: new URL(route('home', lang), base).href },
+      { name: t.galleryTitle, url: new URL(route('gallery', lang), base).href },
+    ]),
+  ]}
+>
+  <header class="wrap page-head">
+    <h1 class="display" data-reveal="lines">{t.galleryTitle}</h1>
+    <p class="lead" data-reveal>{t.galleryIntro}</p>
+    {items.length > 0 && <p class="label">{t.galleryCount(items.length)}</p>}
+  </header>
+
+  <section class="wrap" aria-label={t.galleryTitle}>
+    {
+      items.length === 0 ? (
+        <p class="empty">{t.galleryEmpty}</p>
+      ) : (
+        <ul class="g-grid" role="list">
+          {items.map((it) => (
+            <li class="g-item">
+              <figure>
+                {it.full ? (
+                  <a
+                    class="g-open"
+                    href={it.full.src}
+                    data-gallery-item
+                    data-full={it.full.src}
+                    data-width={it.full.attributes.width}
+                    data-height={it.full.attributes.height}
+                    data-alt={it.alt}
+                    data-title={it.title}
+                    data-client={it.project.data.client}
+                    data-caption={it.caption}
+                    data-href={caseRoute(it.project.id, lang)}
+                    aria-label={`${t.galleryEnlarge}: ${it.alt}`}
+                  >
+                    <Media
+                      lang={lang}
+                      image={it.image}
+                      alt={it.alt}
+                      sizes="(min-width: 72rem) 31vw, (min-width: 40rem) 46vw, 92vw"
+                    />
+                  </a>
+                ) : (
+                  <Media lang={lang} alt={it.alt} aspect={it.aspect} note={it.note || it.alt} />
+                )}
+                <figcaption class="label g-caption">
+                  <a href={caseRoute(it.project.id, lang)}>{it.title}</a>
+                  {it.project.data.client && <span> · {it.project.data.client}</span>}
+                </figcaption>
+              </figure>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </section>
+
+  {
+    viewable > 0 && (
+      <dialog class="viewer" aria-label={t.galleryViewer} data-viewer>
+        <div class="viewer-bar">
+          <p class="label" aria-live="polite" data-viewer-count />
+          <button type="button" class="tool" data-viewer-close>
+            {t.galleryClose}
+          </button>
+        </div>
+        <div class="viewer-stage">
+          <img data-viewer-img alt="" decoding="async" />
+        </div>
+        <div class="viewer-foot">
+          <p class="viewer-caption">
+            <span data-viewer-caption />
+            <a data-viewer-link href="#">
+              {t.galleryViewCase} →
+            </a>
+          </p>
+          <div class="viewer-nav">
+            <button type="button" class="tool" data-viewer-prev aria-label={t.galleryPrev}>
+              ←
+            </button>
+            <button type="button" class="tool" data-viewer-next aria-label={t.galleryNext}>
+              →
+            </button>
+          </div>
+        </div>
+      </dialog>
+    )
+  }
+</Base>
+
+<script>
+  // Visor: mejora progresiva. Sin JS, cada still abre la imagen grande en su propia página.
+  const dialog = document.querySelector<HTMLDialogElement>('[data-viewer]');
+  const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-gallery-item]'));
+
+  if (dialog && links.length) {
+    const img = dialog.querySelector<HTMLImageElement>('[data-viewer-img]')!;
+    const count = dialog.querySelector<HTMLElement>('[data-viewer-count]')!;
+    const caption = dialog.querySelector<HTMLElement>('[data-viewer-caption]')!;
+    const caseLink = dialog.querySelector<HTMLAnchorElement>('[data-viewer-link]')!;
+    let index = 0;
+    let opener: HTMLElement | null = null;
+
+    const show = (i: number) => {
+      index = (i + links.length) % links.length;
+      const d = links[index].dataset;
+      img.src = d.full ?? '';
+      img.alt = d.alt ?? '';
+      img.width = Number(d.width) || 0;
+      img.height = Number(d.height) || 0;
+      caption.textContent = [d.title, d.client, d.caption].filter(Boolean).join(' · ');
+      caseLink.href = d.href ?? '#';
+      count.textContent = `${index + 1} / ${links.length}`;
+    };
+
+    links.forEach((link, i) =>
+      link.addEventListener('click', (e) => {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+        e.preventDefault();
+        opener = link;
+        show(i);
+        dialog.showModal();
+      }),
+    );
+
+    dialog.querySelector('[data-viewer-prev]')?.addEventListener('click', () => show(index - 1));
+    dialog.querySelector('[data-viewer-next]')?.addEventListener('click', () => show(index + 1));
+    dialog.querySelector('[data-viewer-close]')?.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') show(index - 1);
+      if (e.key === 'ArrowRight') show(index + 1);
+    });
+    // Clic fuera de la imagen (en el fondo) cierra.
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+    dialog.addEventListener('close', () => opener?.focus());
+  }
+</script>
+
+<style>
+  .page-head {
+    display: grid;
+    gap: var(--space-4);
+    padding-block: clamp(var(--space-8), 8vw, var(--space-9)) var(--space-7);
+  }
+
+  .empty {
+    max-width: 52ch;
+    color: var(--muted);
+    padding-block: var(--space-6) var(--section);
+  }
+
+  .g-grid {
+    columns: 3 18rem;
+    column-gap: var(--gutter);
+    padding-bottom: var(--section);
+  }
+
+  .g-item {
+    break-inside: avoid;
+    margin-bottom: var(--space-6);
+  }
+
+  figure {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+  }
+
+  .g-open {
+    display: block;
+    overflow: hidden;
+  }
+
+  .g-open :global(img) {
+    transition: transform var(--dur-3) var(--ease-out);
+  }
+
+  .g-open:hover :global(img) {
+    transform: scale(1.02);
+  }
+
+  .g-caption a {
+    color: var(--fg);
+    text-decoration: none;
+  }
+
+  .g-caption a:hover {
+    text-decoration: underline;
+  }
+
+  .viewer {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    padding: max(var(--space-4), env(safe-area-inset-top, 0px)) max(var(--space-4), env(safe-area-inset-right, 0px))
+      max(var(--space-4), env(safe-area-inset-bottom, 0px)) max(var(--space-4), env(safe-area-inset-left, 0px));
+    border: 0;
+    background: var(--bg);
+    color: var(--fg);
+  }
+
+  .viewer[open] {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: var(--space-4);
+  }
+
+  .viewer::backdrop {
+    background: var(--bg);
+  }
+
+  .viewer-bar,
+  .viewer-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  .viewer-stage {
+    position: relative;
+    min-height: 0;
+  }
+
+  /* La imagen siempre cabe completa en el espacio disponible. */
+  .viewer-stage img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .viewer-caption {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
+    max-width: 70ch;
+  }
+
+  .viewer-nav {
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  .tool {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0 var(--space-3);
+    border: var(--border);
+    background: transparent;
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    letter-spacing: var(--label-tracking);
+    text-transform: uppercase;
+  }
+
+  .tool:hover {
+    border-color: var(--fg);
+  }
+</style>

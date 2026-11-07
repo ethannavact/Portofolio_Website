@@ -1,0 +1,87 @@
+---
+import type { AnyImage } from '../../lib/images';
+import Media from '../media/Media.astro';
+import type { Lang } from '../../i18n/routes';
+import { pick } from '../../i18n/ui';
+import { rich } from '../../lib/rich';
+import { SHOW_DRAFTS } from '../../lib/env';
+
+interface Props {
+  lang: Lang;
+  value: {
+    image?: AnyImage;
+    alt: { es: string; en: string };
+    caption: { es: string; en: string };
+    note: string;
+    heading: { es: string; en: string };
+    body: { es: string; en: string };
+    mediaSide: 'left' | 'right';
+    aspect: string;
+  };
+}
+
+const { lang, value } = Astro.props;
+const heading = pick(value.heading, lang);
+const body = pick(value.body, lang);
+const showMedia = Boolean(value.image) || SHOW_DRAFTS;
+---
+
+<div class:list={['wrap', 'grid', 'split', showMedia ? `split--${value.mediaSide}` : 'split--text']}>
+  {
+    showMedia && (
+      <div class="media-col">
+        <Media lang={lang} image={value.image} alt={pick(value.alt, lang)} aspect={value.aspect} crop note={value.note} sizes="(min-width: 56rem) 55vw, 92vw" />
+      </div>
+    )
+  }
+  <div class="text-col">
+    {heading && <h2 class="title-m">{heading}</h2>}
+    {body && <div class="prose body" set:html={rich(body)} />}
+  </div>
+</div>
+
+<style>
+  .split {
+    row-gap: var(--space-5);
+    align-items: center;
+  }
+
+  .media-col,
+  .text-col {
+    grid-column: 1 / -1;
+  }
+
+  .text-col {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .body {
+    font-size: var(--step-1);
+    line-height: 1.5;
+  }
+
+  @media (min-width: 56rem) {
+    .split--left .media-col {
+      grid-column: 1 / span 7;
+    }
+
+    .split--left .text-col {
+      grid-column: 9 / -1;
+    }
+
+    .split--right .media-col {
+      grid-column: 6 / -1;
+      grid-row: 1;
+    }
+
+    .split--right .text-col {
+      grid-column: 1 / span 4;
+      grid-row: 1;
+    }
+
+    .split--text .text-col {
+      grid-column: 5 / -1;
+    }
+  }
+</style>

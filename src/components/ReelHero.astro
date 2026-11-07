@@ -1,0 +1,285 @@
+---
+// Primera sección de la Home: el reel a todo lo ancho, corriendo en loop y mudo.
+// "Ver reel con sonido" lo abre completo en un diálogo. La lógica vive en src/motion/reel.ts.
+import { Picture } from 'astro:assets';
+import type { Lang } from '../i18n/routes';
+import { pick, ui } from '../i18n/ui';
+import type { SiteData } from '../lib/projects';
+import { IS_PREVIEW } from '../lib/env';
+
+interface Props {
+  lang: Lang;
+  site: SiteData;
+}
+
+const { lang, site } = Astro.props;
+const t = ui(lang);
+const reel = site.reel;
+const title = pick(reel.title, lang) || `${t.reelLabel} — ${site.name}`;
+const youtubeId = reel.provider === 'youtube' ? reel.id.trim() : '';
+const thumb = youtubeId && !IS_PREVIEW ? `https://i.ytimg.com/vi/${encodeURIComponent(youtubeId)}/maxresdefault.jpg` : '';
+// El botón es un enlace real a YouTube: funciona sin JavaScript y donde no se puede incrustar
+// (el preview publicado). En el sitio, reel.ts lo convierte en el diálogo con el reel completo.
+const watchUrl = youtubeId ? `https://www.youtube.com/watch?v=${encodeURIComponent(youtubeId)}` : '';
+---
+
+<section class="reel-hero" aria-label={title} data-reel data-yt={youtubeId} data-title={title} data-preview={IS_PREVIEW ? 'true' : undefined}>
+  <div class="reel-frame" data-reel-frame>
+    <div class="reel-media">
+      {
+        reel.poster ? (
+          <Picture
+            src={reel.poster}
+            alt={pick(reel.posterAlt, lang)}
+            formats={['webp']}
+            widths={[768, 1280, 1920, 2560].filter((w) => w <= (reel.poster?.width ?? 1920))}
+            sizes="100vw"
+            loading="eager"
+            fetchpriority="high"
+            class="reel-poster"
+          />
+        ) : thumb ? (
+          <img class="reel-poster" src={thumb} alt="" width="1280" height="720" fetchpriority="high" />
+        ) : null
+      }
+      <div class="reel-bg" data-reel-bg inert></div>
+      <div class="reel-scrim" aria-hidden="true"></div>
+    </div>
+
+    <div class="wrap reel-overlay" data-reel-overlay>
+      <div class="reel-id" data-reveal-group>
+        <p class="label reel-eyebrow">{pick(site.jobTitle, lang)} · {pick(site.location, lang)}</p>
+        <p class="reel-word" aria-hidden="true">{t.reelLabel}</p>
+      </div>
+      <div class="reel-actions" data-reveal-group>
+        {
+          watchUrl && (
+            <a
+              class="reel-btn reel-btn--solid"
+              href={watchUrl}
+              target="_blank"
+              rel="noopener"
+              data-reel-open
+              aria-haspopup={IS_PREVIEW ? undefined : 'dialog'}
+            >
+              <span class="play" aria-hidden="true" />
+              {t.reelWatch}
+              {IS_PREVIEW && <span class="sr-only"> {t.opensNewTab}</span>}
+            </a>
+          )
+        }
+        <button class="reel-btn" type="button" data-reel-toggle aria-pressed="true" data-label-pause={t.reelPause} data-label-play={t.reelPlay} hidden>
+          {t.reelPause}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <dialog class="reel-dialog" data-reel-dialog aria-label={t.reelDialog} data-lenis-prevent>
+    <div class="reel-dialog-bar">
+      <p class="label">{title}</p>
+      <button class="reel-btn" type="button" data-reel-close>{t.reelClose}</button>
+    </div>
+    <div class="reel-player" data-reel-player></div>
+  </dialog>
+</section>
+
+<style>
+  .reel-hero {
+    position: relative;
+  }
+
+  .reel-hero {
+    padding-inline: max(var(--gap), env(safe-area-inset-left, 0px)) max(var(--gap), env(safe-area-inset-right, 0px));
+  }
+
+  .reel-frame {
+    position: relative;
+    height: clamp(26rem, calc(100svh - var(--header-real, var(--header-h)) - var(--gap)), 68rem);
+    overflow: hidden;
+    transform-origin: 50% 0%;
+    border-radius: var(--radius);
+    background: #050505;
+    color: #fff;
+  }
+
+  @media (max-width: 40rem) {
+    .reel-frame {
+      height: auto;
+      aspect-ratio: 4 / 5;
+    }
+  }
+
+  .reel-media {
+    position: absolute;
+    inset: 0;
+    container-type: size;
+  }
+
+  .reel-media :global(picture),
+  .reel-media :global(.reel-poster) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .reel-media :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .reel-bg {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 1.4s var(--ease-out);
+  }
+
+  .reel-bg:global(.is-playing) {
+    opacity: 1;
+  }
+
+  .reel-bg:global(.is-hidden) {
+    opacity: 0;
+  }
+
+  .reel-bg :global(iframe) {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100cqw, 177.78cqh);
+    height: max(100cqh, 56.25cqw);
+    transform: translate(-50%, -50%);
+    border: 0;
+    pointer-events: none;
+  }
+
+  .reel-scrim {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(to top, rgb(0 0 0 / 0.7), rgb(0 0 0 / 0) 52%),
+      linear-gradient(to bottom, rgb(0 0 0 / 0.28), rgb(0 0 0 / 0) 26%);
+    pointer-events: none;
+  }
+
+  .reel-overlay {
+    position: absolute;
+    inset: auto 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-5) var(--space-6);
+    padding-bottom: clamp(var(--space-5), 4vw, var(--space-8));
+  }
+
+  .reel-id {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .reel-eyebrow {
+    color: rgb(255 255 255 / 0.86);
+  }
+
+  .reel-word {
+    font-family: var(--font-display);
+    font-size: clamp(3.5rem, 2rem + 9vw, 11rem);
+    line-height: 0.85;
+    letter-spacing: -0.04em;
+    font-weight: var(--weight-medium);
+  }
+
+  .reel-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .reel-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 48px;
+    padding: 0 var(--space-5);
+    border: 1px solid rgb(255 255 255 / 0.7);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    background: rgb(0 0 0 / 0.5);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    color: #fff;
+    font-weight: var(--weight-medium);
+    transition: background-color var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out);
+  }
+
+  .reel-btn:hover {
+    background: rgb(0 0 0 / 0.75);
+  }
+
+  .reel-btn--solid {
+    background: #fff;
+    color: #0a0a0a;
+    border-color: #fff;
+  }
+
+  .reel-btn--solid:hover {
+    background: rgb(255 255 255 / 0.82);
+  }
+
+  .reel-btn:focus-visible {
+    outline-color: #fff;
+  }
+
+  .play {
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 6px 0 6px 10px;
+    border-color: transparent transparent transparent currentColor;
+  }
+
+  .reel-dialog {
+    width: min(100vw - 2rem, 1440px);
+    max-width: none;
+    padding: var(--space-4);
+    border: 0;
+    background: #050505;
+    color: #fff;
+  }
+
+  .reel-dialog::backdrop {
+    background: rgb(0 0 0 / 0.86);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+
+  .reel-dialog-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-3);
+  }
+
+  .reel-dialog-bar .label {
+    color: rgb(255 255 255 / 0.8);
+  }
+
+  .reel-player {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: #000;
+  }
+
+  .reel-player :global(iframe) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+</style>

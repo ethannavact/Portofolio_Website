@@ -1,0 +1,170 @@
+---
+// Texto de un capítulo del caso: título, cuerpo, cifras, lista, pasos o cita.
+import type { Chapter } from '../lib/chapters';
+import { rich, richInline } from '../lib/rich';
+
+interface Props {
+  chapter: Chapter;
+}
+
+const { chapter: c } = Astro.props;
+---
+
+<div class="ch">
+  {c.heading && <h2 class="ch-heading">{c.heading}</h2>}
+  {c.body && <div class="ch-body" set:html={rich(c.body)} />}
+  {
+    c.steps.length > 0 && (
+      <ol class="ch-steps" role="list">
+        {c.steps.map((s, i) => (
+          <li>
+            <span class="label">{String(i + 1).padStart(2, '0')}</span>
+            <div>
+              {s.title && <p class="ch-step-title">{s.title}</p>}
+              {s.body && <div class="ch-step-body" set:html={rich(s.body)} />}
+            </div>
+          </li>
+        ))}
+      </ol>
+    )
+  }
+  {
+    c.list && (
+      <ol class:list={['ch-list', !c.list.numbered && 'ch-list--plain']} role="list">
+        {c.list.items.map((item, i) => (
+          <li>
+            {c.list!.numbered && <span class="label">{String(i + 1).padStart(2, '0')}</span>}
+            <div>
+              {item.title && <p class="ch-step-title">{item.title}</p>}
+              {item.body && <div class="ch-step-body" set:html={rich(item.body)} />}
+            </div>
+          </li>
+        ))}
+      </ol>
+    )
+  }
+  {
+    c.stats.length > 0 && (
+      <dl class="ch-stats">
+        {c.stats.map((s) => (
+          <div>
+            <dt class="label">{s.label}</dt>
+            <dd class="ch-stat-value">{s.value}</dd>
+          </div>
+        ))}
+      </dl>
+    )
+  }
+  {
+    c.quote && (
+      <figure class="ch-quote">
+        <blockquote set:html={richInline(c.quote.text)} />
+        {(c.quote.author || c.quote.role) && (
+          <figcaption class="label">
+            {c.quote.author}
+            {c.quote.role && ` · ${c.quote.role}`}
+          </figcaption>
+        )}
+      </figure>
+    )
+  }
+</div>
+
+<style>
+  .ch {
+    display: grid;
+    gap: var(--space-4);
+    min-width: 0;
+  }
+
+  /* Como las etiquetas de la referencia («INFO», «YEAR»): monoespaciada y en mayúsculas. */
+  .ch-heading {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--label-tracking);
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+
+
+
+  .ch-body {
+    max-width: 46ch;
+  }
+
+  .ch-body :global(p + p),
+  .ch-body :global(p + ul),
+  .ch-body :global(ul + p) {
+    margin-top: 0.8em;
+  }
+
+  .ch-body :global(ul),
+  .ch-body :global(ol) {
+    padding-left: 1.1em;
+  }
+
+  .ch-steps,
+  .ch-list {
+    display: grid;
+    margin: 0;
+  }
+
+  .ch-steps li,
+  .ch-list li {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    gap: var(--space-3);
+    padding-block: var(--space-3);
+    border-top: var(--border);
+  }
+
+  .ch-list--plain li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ch-step-title {
+    font-weight: var(--weight-bold);
+    letter-spacing: -0.01em;
+  }
+
+  .ch-step-body {
+    color: var(--muted);
+    font-size: 0.9375rem;
+  }
+
+  .ch-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+    gap: var(--space-4);
+    margin-top: var(--space-2);
+  }
+
+  .ch-stats div {
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+    gap: var(--space-1);
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--fg);
+  }
+
+  .ch-stat-value {
+    font-family: var(--font-display);
+    font-size: var(--step-3);
+    font-weight: var(--weight-bold);
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  .ch-quote blockquote {
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+  }
+
+  .ch-quote figcaption {
+    margin-top: var(--space-3);
+  }
+</style>

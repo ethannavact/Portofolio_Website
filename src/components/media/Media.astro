@@ -1,0 +1,116 @@
+---
+// Imagen responsiva con marcador si falta el archivo. Las de proyectos vienen del estudio
+// (ya optimizadas en WebP); las locales las optimiza Astro.
+import type { ImageMetadata } from 'astro';
+import { Picture } from 'astro:assets';
+import { isRemote, remoteSrcset, type AnyImage } from '../../lib/images';
+import Placeholder from './Placeholder.astro';
+import type { Lang } from '../../i18n/routes';
+import { SHOW_DRAFTS } from '../../lib/env';
+
+interface Props {
+  lang: Lang;
+  image?: AnyImage;
+  alt: string;
+  aspect?: string;
+  /** Recorta la imagen a la proporción indicada. */
+  crop?: boolean;
+  sizes?: string;
+  eager?: boolean;
+  note?: string;
+  class?: string;
+  transitionName?: string;
+  /** Se dibuja con WebGL (efectos de scroll, lente y hover). */
+  gl?: boolean;
+}
+
+const {
+  lang,
+  image,
+  alt,
+  aspect = '16/9',
+  crop = false,
+  sizes = '(min-width: 1680px) 1560px, 92vw',
+  eager = false,
+  note,
+  class: className,
+  transitionName,
+  gl = true,
+} = Astro.props;
+
+const remote = isRemote(image) ? image : null;
+const local = image && !isRemote(image) ? (image as ImageMetadata) : null;
+const widths = local ? [480, 768, 1080, 1440, 1920, 2560].filter((w) => w <= local.width) : [];
+if (local && !widths.length) widths.push(local.width);
+
+const style = [crop ? `--ratio: ${aspect}` : '', transitionName ? `view-transition-name: ${transitionName}` : '']
+  .filter(Boolean)
+  .join('; ');
+---
+
+{
+  image ? (
+    <div class:list={['media', crop && 'crop', className]} style={style || undefined} data-gl-media={gl ? '' : undefined}>
+      {remote ? (
+        <img
+          src={remote.src}
+          srcset={remoteSrcset(remote)}
+          sizes={sizes}
+          width={remote.width}
+          height={remote.height}
+          alt={alt}
+          loading={eager ? 'eager' : 'lazy'}
+          fetchpriority={eager ? 'high' : 'auto'}
+          decoding={eager ? 'sync' : 'async'}
+          crossorigin="anonymous"
+          style={remote.color ? `background-color: ${remote.color}` : undefined}
+        />
+      ) : (
+      <Picture
+        src={local!}
+        alt={alt}
+        formats={['webp']}
+        widths={widths}
+        sizes={sizes}
+        loading={eager ? 'eager' : 'lazy'}
+        fetchpriority={eager ? 'high' : 'auto'}
+        decoding={eager ? 'sync' : 'async'}
+      />
+      )}
+    </div>
+  ) : (
+    SHOW_DRAFTS && (
+      <div class:list={['media', className]} style={transitionName ? `view-transition-name: ${transitionName}` : undefined}>
+        <Placeholder lang={lang} aspect={aspect} note={note || alt} sizes={sizes} gl={gl} />
+      </div>
+    )
+  )
+}
+
+<style>
+  .media {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius);
+    background: var(--surface-2);
+  }
+
+  .media :global(img) {
+    width: 100%;
+    height: auto;
+  }
+
+  .crop {
+    aspect-ratio: var(--ratio);
+  }
+
+  .crop :global(picture),
+  .crop :global(img) {
+    width: 100%;
+    height: 100%;
+  }
+
+  .crop :global(img) {
+    object-fit: cover;
+  }
+</style>

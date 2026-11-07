@@ -1,0 +1,62 @@
+---
+import type { AnyImage } from '../../lib/images';
+import VideoEmbed from '../media/VideoEmbed.astro';
+import type { Lang } from '../../i18n/routes';
+import { pick } from '../../i18n/ui';
+import { richInline } from '../../lib/rich';
+import { SHOW_DRAFTS } from '../../lib/env';
+
+interface Props {
+  lang: Lang;
+  projectTitle: string;
+  value: {
+    video: {
+      provider: 'none' | 'youtube' | 'vimeo' | 'file';
+      id: string;
+      url: string;
+      title: { es: string; en: string };
+      aspect: string;
+      loop: boolean;
+      poster?: AnyImage;
+      sources?: { src: string; width: number; height: number; type: string }[];
+    };
+    caption: { es: string; en: string };
+    size: 'full' | 'wide' | 'inset';
+    note: string;
+  };
+}
+
+const { lang, value, projectTitle } = Astro.props;
+const caption = pick(value.caption, lang);
+const hasVideo = value.video.provider !== 'none' && Boolean(value.video.id || value.video.url);
+---
+
+{
+  (hasVideo || SHOW_DRAFTS) && (
+    <figure class:list={['figure', value.size === 'full' ? 'full' : 'wrap']}>
+      <div class:list={['frame', `frame--${value.size}`]}>
+        <VideoEmbed lang={lang} video={value.video} fallbackTitle={projectTitle} note={value.note} />
+        {caption && <figcaption class="caption" set:html={richInline(caption)} />}
+      </div>
+    </figure>
+  )
+}
+
+<style>
+  .frame--inset {
+    max-width: 66rem;
+    margin-inline: auto;
+  }
+
+  .caption {
+    margin-top: var(--space-3);
+    font-size: var(--step--1);
+    color: var(--muted);
+    max-width: var(--measure);
+  }
+
+  .full .caption {
+    padding-left: max(var(--margin), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--margin), env(safe-area-inset-right, 0px));
+  }
+</style>

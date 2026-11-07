@@ -1,0 +1,59 @@
+---
+import type { AnyImage } from '../../lib/images';
+import Media from '../media/Media.astro';
+import type { Lang } from '../../i18n/routes';
+import { pick } from '../../i18n/ui';
+import { richInline } from '../../lib/rich';
+import { SHOW_DRAFTS } from '../../lib/env';
+
+interface Props {
+  lang: Lang;
+  value: {
+    image?: AnyImage;
+    alt: { es: string; en: string };
+    caption: { es: string; en: string };
+    note: string;
+    size: 'full' | 'wide' | 'inset';
+    aspect: string;
+  };
+}
+
+const { lang, value } = Astro.props;
+const caption = pick(value.caption, lang);
+const sizes = value.size === 'full' ? '100vw' : value.size === 'inset' ? '(min-width: 56rem) 66vw, 92vw' : '(min-width: 1680px) 1560px, 92vw';
+const visible = Boolean(value.image) || SHOW_DRAFTS;
+---
+
+{
+  visible && (
+    <figure class:list={['figure', value.size === 'full' ? 'full' : 'wrap']}>
+      <div class:list={['frame', `frame--${value.size}`]}>
+        <Media lang={lang} image={value.image} alt={pick(value.alt, lang)} aspect={value.aspect} note={value.note} sizes={sizes} />
+        {caption && <figcaption class="caption" set:html={richInline(caption)} />}
+      </div>
+    </figure>
+  )
+}
+
+<style>
+  .full {
+    width: 100%;
+  }
+
+  .frame--inset {
+    max-width: 66rem;
+    margin-inline: auto;
+  }
+
+  .caption {
+    margin-top: var(--space-3);
+    font-size: var(--step--1);
+    color: var(--muted);
+    max-width: var(--measure);
+  }
+
+  .full .caption {
+    padding-left: max(var(--margin), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--margin), env(safe-area-inset-right, 0px));
+  }
+</style>

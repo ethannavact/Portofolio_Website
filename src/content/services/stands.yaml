@@ -1,0 +1,104 @@
+name: Diseño y montaje de stands para eventos
+published: true
+order: 110
+title:
+  es: Diseño y montaje de stands para eventos
+  en: Event booth design and build
+tagline:
+  es: >-
+    Stands y espacios de marca para expos y eventos, del diseño al montaje, con
+    la experiencia integrada.
+  en: >-
+    Booths and brand spaces for expos and events, from design to build, with the
+    experience built in.
+intro:
+  es: >-
+    Diseño stands donde la experiencia es parte del espacio desde el principio:
+    pantallas, juegos, iluminación y recorrido pensados juntos. Coordino la
+    producción y el montaje con proveedores para que lo que se diseñó sea lo que
+    se construye.
+
+
+    Un stand tiene que atraer desde el pasillo, explicar la marca en segundos y
+    convertir visitas en contactos. Lo diseño con esos tres objetivos.
+  en: >-
+    I design booths where the experience is part of the space from day one:
+    screens, games, lighting and flow planned together. I coordinate production
+    and build with vendors so what was designed is what gets built.
+
+
+    A booth has to pull people in from the aisle, explain the brand in seconds
+    and turn visits into leads. I design for those three goals.
+fit:
+  - es: >-
+      Tu marca va a una expo o congreso y necesita destacar entre cientos de
+      stands.
+    en: >-
+      Your brand is going to an expo or congress and needs to stand out among
+      hundreds of booths.
+  - es: Quieres que el stand capture registros de calidad.
+    en: You want the booth to capture quality leads.
+  - es: Necesitas un espacio que se pueda montar en varias ciudades o eventos.
+    en: You need a space that can be set up in several cities or events.
+includes:
+  - title:
+      es: Diseño del espacio
+      en: Space design
+    body:
+      es: Planta, recorrido, renders y materiales.
+      en: Floor plan, flow, renders and materials.
+  - title:
+      es: Experiencia integrada
+      en: Built-in experience
+    body:
+      es: Pantallas, juego o interacción diseñados con el stand.
+      en: Screens, game or interaction designed with the booth.
+  - title:
+      es: Producción y montaje
+      en: Production and build
+    body:
+      es: Coordinación con carpintería, impresión, pantallas e iluminación.
+      en: Coordinating carpentry, print, screens and lighting.
+  - title:
+      es: Operación
+      en: Operation
+    body:
+      es: Pruebas, soporte durante el evento y desmontaje.
+      en: Testing, support during the event and teardown.
+process:
+  - title:
+      es: Brief y espacio
+      en: Brief and space
+    body:
+      es: Objetivos, metros y reglas del recinto.
+      en: Goals, footprint and venue rules.
+  - title:
+      es: Diseño
+      en: Design
+    body:
+      es: Propuesta con renders y presupuesto.
+      en: Proposal with renders and budget.
+  - title:
+      es: Producción
+      en: Production
+    body:
+      es: Fabricación y contenido.
+      en: Fabrication and content.
+  - title:
+      es: Montaje
+      en: Build
+    body:
+      es: Instalación, evento y desmontaje.
+      en: Install, event and teardown.
+projects:
+  - sesderma-dermajal
+  - viva-aerobus-airplane-game
+  - nike-is-a-girl-momento-magico
+  - taf-vr-world-cup
+reviewNotes: >-
+  Copy provisional: se reescribe junto con la identidad (target: agencias y
+  marcas, sin jerga técnica).
+
+
+  Ningún ejemplo publicado es un stand completo (NIAG es un corner de retail en
+  pitch). Candidato: el stand con pantalla LED de Expo Santa Fe (sep–oct 2026).

@@ -1,0 +1,130 @@
+name: Dirección creativa
+published: true
+order: 10
+title:
+  es: Dirección creativa
+  en: Creative direction
+tagline:
+  es: >-
+    La idea central de una campaña o plataforma, y todo lo que se desprende de
+    ella hasta que existe en el mundo.
+  en: >-
+    The central idea of a campaign or platform, and everything that follows from
+    it until it exists in the world.
+intro:
+  es: >-
+    Tomo un brief y lo convierto en una idea que se puede contar en una frase y
+    construir en muchos formatos: una plataforma de marca, una activación, un
+    espacio, una pieza para redes. Defino el concepto, el tono y las reglas, y
+    acompaño la producción para que lo que se entrega siga siendo esa idea.
+
+
+    Busco que cada pieza solo pueda pertenecer a esa marca. Las decisiones salen
+    de la marca, de su público y de lo que el proyecto tiene que lograr: ventas,
+    conversación, registros o presencia.
+  en: >-
+    I take a brief and turn it into an idea you can say in one sentence and
+    build in many formats: a brand platform, an activation, a space, a social
+    piece. I define the concept, the tone and the rules, and I stay through
+    production so what gets delivered is still that idea.
+
+
+    I aim for work that could only belong to that brand. Every decision comes
+    from the brand, its audience and what the project has to achieve: sales,
+    conversation, sign-ups or presence.
+fit:
+  - es: >-
+      Tienes un pitch y necesitas una idea que gane, con un prototipo que la
+      haga creíble.
+    en: >-
+      You have a pitch and need a winning idea, with a prototype that makes it
+      believable.
+  - es: La marca necesita una plataforma que dure varias temporadas.
+    en: The brand needs a platform that lasts several seasons.
+  - es: >-
+      Hay muchas piezas (evento, tienda, redes, web) y tienen que sentirse parte
+      de lo mismo.
+    en: >-
+      There are many pieces (event, retail, social, web) and they have to feel
+      like one thing.
+  - es: >-
+      La agencia tiene la estrategia y busca a alguien que la convierta en una
+      experiencia concreta.
+    en: >-
+      The agency has the strategy and needs someone to turn it into a concrete
+      experience.
+includes:
+  - title:
+      es: Concepto y narrativa
+      en: Concept and narrative
+    body:
+      es: La idea central, el mensaje y la historia que lo sostiene.
+      en: The central idea, the message and the story behind it.
+  - title:
+      es: Plataforma de marca
+      en: Brand platform
+    body:
+      es: Nombre, tono, sistema visual y reglas para crecer sin perder coherencia.
+      en: Name, tone, visual system and rules to grow without losing coherence.
+  - title:
+      es: Mapa de puntos de contacto
+      en: Touchpoint map
+    body:
+      es: >-
+        Qué pasa en el evento, en tienda, en redes y en digital, y qué aporta
+        cada uno.
+      en: >-
+        What happens at the event, in store, on social and online, and what each
+        one adds.
+  - title:
+      es: Material para pitch
+      en: Pitch material
+    body:
+      es: >-
+        Presentación, visuales y, si hace falta, un prototipo funcional para
+        mostrar antes de ganar la cuenta.
+      en: >-
+        Deck, visuals and, when needed, a working prototype to show before
+        winning the account.
+  - title:
+      es: Dirección de la producción
+      en: Production direction
+    body:
+      es: Seguimiento de equipos y proveedores hasta la entrega.
+      en: Guiding teams and vendors all the way to delivery.
+process:
+  - title:
+      es: Entender
+      en: Understand
+    body:
+      es: Brief, marca, público y cómo se va a medir el éxito.
+      en: Brief, brand, audience and how success will be measured.
+  - title:
+      es: Idear
+      en: Ideate
+    body:
+      es: Varias rutas y una elegida, defendida con referencias y argumentos.
+      en: Several routes and one chosen, backed by references and reasons.
+  - title:
+      es: Aterrizar
+      en: Plan
+    body:
+      es: Piezas, presupuesto, calendario y equipo.
+      en: Pieces, budget, schedule and team.
+  - title:
+      es: Dirigir
+      en: Direct
+    body:
+      es: Producción, revisiones y entrega, cuidando que la idea llegue completa.
+      en: Production, reviews and delivery, making sure the idea arrives intact.
+projects:
+  - nike-is-a-girl-momento-magico
+  - simbiosis-offf-mx
+  - the-mind-thesis
+reviewNotes: >-
+  Copy provisional: se reescribe junto con la identidad (target: agencias y
+  marcas, sin jerga técnica).
+
+
+  Pocos ejemplos con rol de dirección creativa: hoy solo NIAG está publicado.
+  Sumar casos donde lideraste el concepto.

@@ -1,0 +1,88 @@
+---
+import type { Lang } from '../../i18n/routes';
+import { pick } from '../../i18n/ui';
+import { rich } from '../../lib/rich';
+
+interface Props {
+  lang: Lang;
+  value: {
+    heading: { es: string; en: string };
+    body: { es: string; en: string };
+    style: 'default' | 'lead' | 'columns';
+  };
+}
+
+const { lang, value } = Astro.props;
+const heading = pick(value.heading, lang);
+const body = pick(value.body, lang);
+---
+
+{
+  (heading || body) && (
+    <div class:list={['wrap', 'grid', 'text', `text--${value.style}`]}>
+      {heading && (
+        <h2 class:list={['heading', value.style === 'columns' ? 'label-heading' : 'title-m']}>{heading}</h2>
+      )}
+      {body && <div class="prose body" set:html={rich(body)} />}
+    </div>
+  )
+}
+
+<style>
+  .text {
+    row-gap: var(--space-4);
+  }
+
+  .heading,
+  .body {
+    grid-column: 1 / -1;
+  }
+
+  .label-heading {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    font-weight: var(--weight-regular);
+    letter-spacing: var(--label-tracking);
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-top: 0.45em;
+  }
+
+  .text--default .body {
+    font-size: var(--step-1);
+    line-height: 1.5;
+  }
+
+  .text--lead .body {
+    font-family: var(--font-display);
+    font-size: var(--step-3);
+    line-height: 1.15;
+    letter-spacing: var(--display-tracking);
+    max-width: 30ch;
+  }
+
+  .text--columns .body {
+    font-size: var(--step-1);
+    line-height: 1.5;
+  }
+
+  @media (min-width: 56rem) {
+    .text--columns .heading {
+      grid-column: 1 / span 4;
+    }
+
+    .text--columns .body {
+      grid-column: 5 / -1;
+    }
+
+    .text--default .heading,
+    .text--default .body {
+      grid-column: 3 / span 8;
+    }
+
+    .text--lead .heading,
+    .text--lead .body {
+      grid-column: 1 / span 10;
+    }
+  }
+</style>

@@ -1,0 +1,126 @@
+---
+import { HTML_LANG, otherLang, route, type Alternates, type Lang } from '../i18n/routes';
+import { pick, ui } from '../i18n/ui';
+import type { SiteData } from '../lib/projects';
+import ContactList from './ContactList.astro';
+
+interface Props {
+  lang: Lang;
+  alternates: Alternates;
+  site: SiteData;
+}
+
+const { lang, alternates, site } = Astro.props;
+const t = ui(lang);
+const alt = otherLang(lang);
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="wrap footer-grid">
+    <div class="who">
+      <p class="name">{site.name}</p>
+      <p class="muted">{pick(site.jobTitle, lang)} · {pick(site.location, lang)}</p>
+    </div>
+
+    <section class="reach" aria-label={t.contactData}>
+      <ContactList lang={lang} site={site} id="footer" size="small" />
+    </section>
+
+    <nav class="links" aria-label={t.footerNav}>
+      <ul role="list">
+        <li><a href={route('work', lang)}>{t.navWork}</a></li>
+        <li><a href={route('services', lang)}>{t.navServices}</a></li>
+        <li><a href={route('gallery', lang)}>{t.navGallery}</a></li>
+        <li><a href={route('info', lang)}>{t.navInfo}</a></li>
+        <li>
+          <a href={alternates[alt]} hreflang={HTML_LANG[alt]} lang={HTML_LANG[alt]}>{t.langSwitch}</a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="meta">
+      <p class="label">© {year} {site.name}</p>
+      <a class="label" href="#contenido">{t.backToTop} ↑</a>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin: var(--gap);
+    margin-bottom: calc(var(--gap) + env(safe-area-inset-bottom, 0px));
+    padding-block: var(--space-7);
+    background: var(--surface);
+    border-radius: var(--radius);
+  }
+
+  .footer-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-6) var(--space-7);
+  }
+
+  @media (min-width: 56rem) {
+    .footer-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) auto;
+    }
+
+    .links {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .reach {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+    }
+
+    .meta {
+      grid-column: 3;
+      grid-row: 1 / span 2;
+      align-self: end;
+    }
+  }
+
+  .reach {
+    min-width: 0;
+  }
+
+  .name {
+    font-family: var(--font-display);
+    font-weight: var(--weight-bold);
+  }
+
+  .links ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+  }
+
+  .links a {
+    display: inline-block;
+    padding-block: var(--space-2);
+  }
+
+  .meta {
+    display: grid;
+    gap: var(--space-2);
+    justify-items: end;
+  }
+
+  .meta a {
+    text-decoration: none;
+  }
+
+  .meta a:hover {
+    color: var(--fg);
+  }
+
+  @media (max-width: 40rem) {
+    .meta {
+      justify-items: start;
+    }
+  }
+</style>

@@ -1,0 +1,118 @@
+name: Shows
+published: true
+order: 50
+title:
+  es: Shows
+  en: Shows
+tagline:
+  es: >-
+    Visuales para conciertos, festivales y shows de marca: un mundo por canción,
+    sincronizado con la música.
+  en: >-
+    Visuals for concerts, festivals and brand shows: a world for every song, in
+    sync with the music.
+intro:
+  es: >-
+    Creo el contenido de pantallas para artistas y marcas en vivo: mundos,
+    personajes y efectos pensados para cada canción o momento del show, a escala
+    de estadio o de escenario de festival. También diseño shows donde el público
+    decide qué pasa en el escenario.
+
+
+    Trabajo con el equipo creativo del artista, la producción y los operadores
+    para que lo que se ve en pantalla llegue a tiempo, se vea bien en la
+    pantalla real y funcione noche tras noche en gira.
+  en: >-
+    I create screen content for artists and brands on stage: worlds, characters
+    and effects designed for each song or moment of the show, at stadium or
+    festival scale. I also design shows where the audience decides what happens
+    on stage.
+
+
+    I work with the artist’s creative team, production and operators so what’s
+    on screen arrives on time, looks right on the real screen and works night
+    after night on tour.
+fit:
+  - es: >-
+      Un artista prepara gira o un show especial y necesita visuales a la altura
+      del escenario.
+    en: >-
+      An artist is preparing a tour or a special show and needs visuals that
+      match the stage.
+  - es: Una marca patrocina un escenario o festival y quiere ser parte del show.
+    en: A brand sponsors a stage or festival and wants to be part of the show.
+  - es: >-
+      Buscas un show donde el público vote, cante o juegue con lo que pasa en
+      pantalla.
+    en: >-
+      You want a show where the audience votes, sings or plays with what happens
+      on screen.
+includes:
+  - title:
+      es: Concepto visual del show
+      en: Visual concept
+    body:
+      es: Un lenguaje para todo el show y una idea por canción o bloque.
+      en: One language for the whole show and an idea for each song or segment.
+  - title:
+      es: Visuales por canción
+      en: Visuals per song
+    body:
+      es: Mundos, personajes y efectos sincronizados con la música.
+      en: Worlds, characters and effects in sync with the music.
+  - title:
+      es: Personajes y captura de movimiento
+      en: Characters and motion capture
+    body:
+      es: Artistas o avatares digitales que bailan o actúan.
+      en: Digital artists or avatars that dance or perform.
+  - title:
+      es: Adaptación a pantallas
+      en: Screen adaptation
+    body:
+      es: Contenido a la resolución y formato de cada escenario.
+      en: Content at the resolution and format of each stage.
+  - title:
+      es: Soporte en vivo
+      en: Live support
+    body:
+      es: Ensayos, ajustes y operación cuando el show lo requiere.
+      en: Rehearsals, adjustments and operation when the show needs it.
+process:
+  - title:
+      es: Escucha y concepto
+      en: Listen and concept
+    body:
+      es: Setlist, narrativa del show y referencias por canción.
+      en: Setlist, show narrative and references per song.
+  - title:
+      es: Producción
+      en: Production
+    body:
+      es: Visuales por bloques, con revisiones del artista.
+      en: Visuals in blocks, with artist reviews.
+  - title:
+      es: Ensayos
+      en: Rehearsals
+    body:
+      es: Prueba en la pantalla real y ajuste de sincronía.
+      en: Testing on the real screen and tightening the sync.
+  - title:
+      es: Show
+      en: Show
+    body:
+      es: Entrega para gira u operación en vivo.
+      en: Delivery for touring or live operation.
+projects:
+  - kenia-os-live-visuals
+  - the-warning-live-visuals
+  - dj-silver-heineken
+  - enrique-bunbury-huracan-ambulante
+  - camilo-vii-palacio
+  - coca-cola-flow-fest-sprite
+  - the-wookies-edc
+  - amazon-music-duelo-de-titanes
+  - vaiven-ai-visuals
+reviewNotes: >-
+  Copy provisional: se reescribe junto con la identidad (target: agencias y
+  marcas, sin jerga técnica).

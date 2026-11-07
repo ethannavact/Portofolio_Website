@@ -1,0 +1,114 @@
+name: Experiencias inmersivas e interactivas
+published: true
+order: 30
+title:
+  es: Experiencias inmersivas e interactivas
+  en: Immersive and interactive experiences
+tagline:
+  es: >-
+    Espacios donde el público entra a la historia, la recorre y participa en
+    ella.
+  en: >-
+    Spaces where people step into the story, move through it and take part in
+    it.
+intro:
+  es: >-
+    Diseño y construyo salas, recorridos y lanzamientos donde pantallas, luz,
+    sonido y espacio cuentan una sola historia. Cuando tiene sentido, el público
+    la cambia con su presencia, su movimiento o sus decisiones.
+
+
+    Cuido que la experiencia funcione para quien la vive y para la marca: que se
+    entienda sin instrucciones, que la gente quiera compartirla y que aguante
+    semanas o meses de operación.
+  en: >-
+    I design and build rooms, journeys and launches where screens, light, sound
+    and space tell one story. When it makes sense, the audience changes it with
+    their presence, movement or choices.
+
+
+    I make sure it works for the people inside and for the brand: understood
+    without instructions, worth sharing, and able to run for weeks or months.
+fit:
+  - es: Un lanzamiento de producto que tiene que sentirse como un evento.
+    en: A product launch that has to feel like an event.
+  - es: >-
+      Una exposición o espacio permanente que necesita contenido a escala de
+      sala.
+    en: An exhibition or permanent space that needs room-scale content.
+  - es: Una marca que quiere que su público viva el concepto en carne propia.
+    en: A brand that wants its audience to live the concept first-hand.
+  - es: Un espacio público o cultural donde la gente participa y deja algo propio.
+    en: >-
+      A public or cultural space where people take part and leave something of
+      their own.
+includes:
+  - title:
+      es: Concepto y recorrido
+      en: Concept and journey
+    body:
+      es: Qué siente el visitante al entrar, durante y al salir.
+      en: What visitors feel on the way in, inside and on the way out.
+  - title:
+      es: Contenido para pantallas y proyección
+      en: Screen and projection content
+    body:
+      es: Mundos y animación a la medida de cada muro, pantalla o superficie.
+      en: Worlds and animation made for each wall, screen or surface.
+  - title:
+      es: Interacción
+      en: Interaction
+    body:
+      es: Lo que hace el público y cómo le responde la experiencia.
+      en: What the audience does and how the experience answers.
+  - title:
+      es: Integración y montaje
+      en: Integration and install
+    body:
+      es: Coordinación con producción, pruebas en sitio y apertura.
+      en: Coordination with production, on-site testing and opening.
+  - title:
+      es: Registro
+      en: Documentation
+    body:
+      es: >-
+        Material para que la experiencia viva en redes y en el caso de la
+        agencia.
+      en: >-
+        Material so the experience lives on social and in the agency’s case
+        study.
+process:
+  - title:
+      es: Concepto
+      en: Concept
+    body:
+      es: Historia, recorrido y lo que debe recordar el visitante.
+      en: Story, journey and what visitors should remember.
+  - title:
+      es: Previsualización
+      en: Previsualization
+    body:
+      es: Maquetas y simulaciones del espacio antes de producir.
+      en: Mock-ups and simulations of the space before production.
+  - title:
+      es: Producción
+      en: Production
+    body:
+      es: Contenido, interacción y pruebas por etapas.
+      en: Content, interaction and testing in stages.
+  - title:
+      es: Montaje y operación
+      en: Install and run
+    body:
+      es: Instalación, ajustes en sitio y acompañamiento en la apertura.
+      en: Installation, on-site tuning and support at opening.
+projects:
+  - porsche-launch
+  - utopia-coyoacan
+  - immersive-king-tut
+  - vive-mi-seleccion
+  - nike-is-a-girl-momento-magico
+  - centro-meta-magallanes-ar
+reviewNotes: >-
+  Copy provisional: se reescribe junto con la identidad (target: agencias y
+  marcas, sin jerga técnica).

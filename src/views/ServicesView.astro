@@ -1,0 +1,227 @@
+---
+import { imageUrl } from '../lib/images';
+import Base from '../layouts/Base.astro';
+import Media from '../components/media/Media.astro';
+import { alternatesFor, contactRoute, route, serviceRoute, type Lang } from '../i18n/routes';
+import { pick, ui } from '../i18n/ui';
+import { examplesFor, getServices } from '../lib/services';
+import { breadcrumbLd } from '../lib/seo';
+import { placeholderFor } from '../lib/placeholders';
+import { SHOW_DRAFTS } from '../lib/env';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = ui(lang);
+const base = Astro.site ?? new URL(Astro.url.origin);
+const services = await Promise.all(
+  (await getServices()).map(async (s) => {
+    const examples = await examplesFor(s);
+    // Clientes de los ejemplos, sin repetir (los proyectos personales no tienen cliente).
+    const clients = [...new Set(examples.map((p) => p.data.client).filter(Boolean))];
+    const first = examples[0];
+    const img = first?.data.cover ?? (first && SHOW_DRAFTS ? placeholderFor(first.data.coverNote || pick(first.data.title, lang)) : undefined);
+    const media = img
+      ? {
+          preview: await imageUrl(img, 768, { quality: 78 }),
+        }
+      : undefined;
+    return { service: s, examples, clients, media };
+  }),
+);
+---
+
+<Base
+  lang={lang}
+  title={t.servicesTitle}
+  description={t.servicesIntro}
+  alternates={alternatesFor('services')}
+  current="services"
+  jsonLd={[
+    breadcrumbLd([
+      { name: t.home, url: new URL(route('home', lang), base).href },
+      { name: t.servicesTitle, url: new URL(route('services', lang), base).href },
+    ]),
+  ]}
+>
+  <header class="wrap page-head">
+    <h1 class="display" data-reveal="lines">{t.servicesTitle}</h1>
+    <p class="lead" data-reveal>{t.servicesIntro}</p>
+  </header>
+
+  <section class="wrap" aria-labelledby="services-list-title">
+    <h2 class="sr-only" id="services-list-title">{t.servicesTitle}</h2>
+    <ul class="service-list" role="list" data-reveal-group>
+      {
+        services.map(({ service, examples, clients, media }) => {
+          const d = service.data;
+          const thumbs = examples.filter((p) => p.data.cover).slice(0, 3);
+          return (
+            <li class="service" data-preview-src={media?.preview}>
+              <div class="service-text">
+                <h3 class="service-title">
+                  <a class="service-link" href={serviceRoute(service.id, lang)}>
+                    {pick(d.title, lang)}
+                  </a>
+                  {!d.published && <span class="badge badge--draft label">{t.draft}</span>}
+                </h3>
+                {pick(d.tagline, lang) && <p class="service-tagline">{pick(d.tagline, lang)}</p>}
+                {examples.length > 0 && (
+                  <p class="label service-count">
+                    {t.examplesCount(examples.length)}
+                    {clients.length > 0 && <span aria-hidden="true"> · </span>}
+                    {clients.slice(0, 4).join(', ')}
+                  </p>
+                )}
+              </div>
+              {thumbs.length > 0 && (
+                <div class="thumbs" aria-hidden="true">
+                  {thumbs.map((p) => (
+                    <Media lang={lang} image={p.data.cover} alt="" aspect="4/3" crop sizes="12rem" />
+                  ))}
+                </div>
+              )}
+              <span class="arrow" aria-hidden="true">→</span>
+            </li>
+          );
+        })
+      }
+    </ul>
+  </section>
+
+  <section class="wrap cta-box section" aria-labelledby="services-cta">
+    <h2 class="title-l" id="services-cta" data-reveal="lines">{t.serviceCta}</h2>
+    <a class="btn btn--solid" href={contactRoute(lang)}>{t.getInTouch}</a>
+  </section>
+</Base>
+
+<style>
+  .page-head {
+    display: grid;
+    gap: var(--space-5);
+    padding-block: clamp(var(--space-8), 8vw, var(--space-9)) var(--space-7);
+  }
+
+  .page-head .lead {
+    max-width: 40ch;
+  }
+
+  .service-list {
+    display: grid;
+    border-bottom: var(--border);
+  }
+
+  .service {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-4) var(--gutter);
+    align-items: center;
+    padding-block: var(--space-6);
+    border-top: var(--border);
+  }
+
+  .service-text {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .service-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-3);
+    font-size: var(--step-3);
+    line-height: 1.08;
+    text-wrap: balance;
+  }
+
+  .service-link {
+    text-decoration: none;
+  }
+
+  /* Toda la fila es clicable; el nombre accesible es el título. */
+  .service-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+
+  .service:hover .service-link {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.16em;
+  }
+
+  .service-link:focus-visible {
+    outline: none;
+  }
+
+  .service:has(.service-link:focus-visible) {
+    outline: 2px solid var(--focus);
+    outline-offset: 4px;
+  }
+
+  .service-tagline {
+    color: var(--muted);
+    max-width: 56ch;
+  }
+
+  .service-count {
+    margin-top: var(--space-1);
+  }
+
+  .thumbs {
+    display: none;
+  }
+
+  .arrow {
+    font-size: var(--step-2);
+    transition: transform var(--dur-2) var(--ease-out);
+  }
+
+  .service:hover .arrow {
+    transform: translateX(6px);
+  }
+
+  @media (min-width: 64rem) {
+    .service {
+      grid-template-columns: minmax(0, 1fr) auto auto;
+    }
+
+    .thumbs {
+      display: flex;
+      gap: var(--space-2);
+    }
+
+    .thumbs :global(.media) {
+      width: 7.5rem;
+    }
+  }
+
+  .badge {
+    font-size: var(--step--1);
+    border: var(--border);
+    padding: 0 var(--space-2);
+  }
+
+  .badge--draft {
+    border-color: var(--draft);
+    color: var(--draft);
+  }
+
+  .cta-box {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-5);
+  }
+
+  .cta-box h2 {
+    max-width: 20ch;
+  }
+</style>

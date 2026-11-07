@@ -1,0 +1,59 @@
+---
+import type { Lang } from '../../i18n/routes';
+import { pick } from '../../i18n/ui';
+
+interface Props {
+  lang: Lang;
+  value: {
+    text: { es: string; en: string };
+    author: string;
+    role: { es: string; en: string };
+  };
+}
+
+const { lang, value } = Astro.props;
+const text = pick(value.text, lang);
+const role = pick(value.role, lang);
+---
+
+{
+  text && (
+    <figure class="wrap grid quote">
+      <blockquote>
+        <p>“{text}”</p>
+      </blockquote>
+      {value.author && (
+        <figcaption class="label">
+          {value.author}
+          {role && <span> · {role}</span>}
+        </figcaption>
+      )}
+    </figure>
+  )
+}
+
+<style>
+  .quote {
+    row-gap: var(--space-4);
+  }
+
+  blockquote,
+  figcaption {
+    grid-column: 1 / -1;
+  }
+
+  blockquote p {
+    font-family: var(--font-display);
+    font-size: var(--step-3);
+    line-height: 1.15;
+    letter-spacing: var(--display-tracking);
+    max-width: 32ch;
+  }
+
+  @media (min-width: 56rem) {
+    blockquote,
+    figcaption {
+      grid-column: 3 / -1;
+    }
+  }
+</style>

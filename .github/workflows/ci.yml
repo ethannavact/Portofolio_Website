@@ -1,0 +1,26 @@
+# Revisión automática en cada push / pull request: tipos, contenido y build.
+# Cloudflare Pages hace su propio build para publicar; esto solo avisa si algo se rompió.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # Los proyectos vienen del estudio: define la variable STUDIO_CONTENT en el repositorio
+    # (Settings → Secrets and variables → Actions → Variables) con la URL pública de content.json.
+    if: ${{ vars.STUDIO_CONTENT != '' }}
+    env:
+      STUDIO_CONTENT: ${{ vars.STUDIO_CONTENT }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run build

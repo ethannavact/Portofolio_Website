@@ -1,0 +1,180 @@
+bio:
+  es: >-
+    Soy Ethan Nava, Creative Director y Creative Technologist en la Ciudad de
+    México. Llevo cerca de ocho años trabajando entre la estética y la
+    tecnología: shows en vivo, juegos para activaciones, experiencias inmersivas
+    y contenido en tiempo real para marcas, artistas e instituciones.
+
+
+    Mi trabajo va de la dirección de arte a la construcción del sistema que
+    corre el día del evento: worldbuilding procedural en Houdini, mundos y VFX
+    en Unreal Engine 5, captura de movimiento e interacción con el público.
+  en: >-
+    I'm Ethan Nava, a Creative Director and Creative Technologist based in
+    Mexico City. For about eight years I have worked between aesthetics and
+    technology: live shows, activation games, immersive experiences and
+    real-time content for brands, artists and institutions.
+
+
+    My work runs from art direction to building the system that runs on show
+    day: procedural worldbuilding in Houdini, worlds and VFX in Unreal Engine 5,
+    motion capture and audience interaction.
+approach: {}
+timeline:
+  - years: 2018 —
+    place: Ethan Nava (freelance)
+    role:
+      es: Creative Director & Creative Technologist
+      en: Creative Director & Creative Technologist
+    note: {}
+  - years: 2025 — 2026
+    place: WeMake
+    role:
+      es: Director de arte · Lead 3D · Unreal Engine Artist
+      en: Art Director · 3D Lead · Unreal Engine Artist
+    note:
+      es: colaborador externo
+      en: external collaborator
+  - years: 2022 — 2024
+    place: R3ALID@D
+    role:
+      es: Technical Artist
+      en: Technical Artist
+    note: {}
+  - years: '2021'
+    place: Cocolab
+    role:
+      es: Motion Graphics Artist · Unreal Engine Artist
+      en: Motion Graphics Artist · Unreal Engine Artist
+    note:
+      es: freelance por proyecto
+      en: freelance, per project
+  - years: 2018 — 2023
+    place: Centro de Diseño, Cine y Televisión
+    role:
+      es: Estudios
+      en: Studies
+    note: {}
+clientGroups:
+  - label:
+      es: Marcas
+      en: Brands
+    names:
+      - Nike
+      - Netflix
+      - HBO
+      - Porsche
+      - Meta
+      - Amazon Music
+      - Heineken
+      - AXE
+      - Coca-Cola
+      - Takis
+      - FUD
+      - Mary Kay
+      - Sesderma
+      - Liverpool
+      - El Palacio de Hierro
+      - Viva Aerobús
+      - TAF
+      - 1DOC3
+  - label:
+      es: Instituciones, festivales y medios
+      en: Institutions, festivals and media
+    names:
+      - Pumas UNAM
+      - AICM
+      - Volando Contigo
+      - Lighthouse Immersive
+      - FMF
+      - OCESA
+      - Gobierno de la Ciudad de México
+      - Festival Ceremonia
+      - Flow Fest
+      - EDC México
+      - Vaivén Festival
+      - OFFF MX
+      - PDA
+      - CENTRO × Meta × Alejandro Magallanes
+  - label:
+      es: Artistas
+      en: Artists
+    names:
+      - Kenia OS
+      - Enrique Bunbury
+      - Gera MX
+      - María Becerra
+      - Camilo VII
+      - The Warning
+      - The Wookies
+      - LEX MX
+      - Santa Fe Klan
+stackGroups:
+  - label:
+      es: Dirección
+      en: Direction
+    items:
+      - es: Dirección de arte
+        en: Art direction
+      - es: Concepto creativo
+        en: Creative concept
+      - es: Diseño de experiencias
+        en: Experience design
+      - es: Pitching
+        en: Pitching
+      - es: Liderazgo de equipos 3D
+        en: Leading 3D teams
+  - label:
+      es: Formatos
+      en: Formats
+    items:
+      - es: Experiencias phygital e interactivas
+        en: Phygital and interactive experiences
+      - es: FOOH / DOOH
+        en: FOOH / DOOH
+      - es: Visuales para shows en vivo
+        en: Live show visuals
+      - es: Juegos de marca
+        en: Brand games
+      - es: Salas inmersivas
+        en: Immersive rooms
+  - label:
+      es: Técnica
+      en: Tech edge
+    items:
+      - es: Houdini FX
+        en: Houdini FX
+      - es: Unreal Engine
+        en: Unreal Engine
+      - es: Adobe After Effects
+        en: Adobe After Effects
+      - es: DaVinci Resolve
+        en: DaVinci Resolve
+      - es: TouchDesigner
+        en: TouchDesigner
+      - es: ComfyUI
+        en: ComfyUI
+      - es: Seedance 2.5 prompting
+        en: Seedance 2.5 prompting
+      - es: Midjourney prompting
+        en: Midjourney prompting
+      - es: 'Motion capture (Shogun / Vicon, OptiTrack, Rokoko, Move AI)'
+        en: 'Motion capture (Shogun / Vicon, OptiTrack, Rokoko, Move AI)'
+      - es: C++
+        en: C++
+      - es: JavaScript
+        en: JavaScript
+      - es: 'HTML & CSS'
+        en: 'HTML & CSS'
+      - es: Vibe coding
+        en: Vibe coding
+      - es: Rhinoceros 3D
+        en: Rhinoceros 3D
+      - es: Figma
+        en: Figma
+      - es: Blender
+        en: Blender
+      - es: MediaPipe
+        en: MediaPipe
+      - es: Meta Quest
+        en: Meta Quest

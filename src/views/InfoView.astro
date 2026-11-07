@@ -1,0 +1,326 @@
+---
+import Base from '../layouts/Base.astro';
+import { alternatesFor, route, type Lang } from '../i18n/routes';
+import { pick, ui } from '../i18n/ui';
+import { getAbout, getSite } from '../lib/projects';
+import { breadcrumbLd, personLd } from '../lib/seo';
+import { plain, rich } from '../lib/rich';
+import ContactList from '../components/ContactList.astro';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = ui(lang);
+const site = await getSite();
+const about = await getAbout();
+const base = Astro.site ?? new URL(Astro.url.origin);
+const bio = pick(about.bio, lang);
+const approach = pick(about.approach, lang);
+const availability = pick(site.availability, lang);
+// «2018 —» = sigue en curso: se muestra «2018 — Actualidad».
+const years = (value: string) => (/—\s*$/.test(value.trim()) ? `${value.trim()} ${t.present}` : value);
+const stackGroups = about.stackGroups.filter((g) => g.items.length > 0);
+---
+
+<Base
+  lang={lang}
+  title={t.infoTitle}
+  description={plain(bio, 160)}
+  alternates={alternatesFor('info')}
+  current="info"
+  type="profile"
+  jsonLd={[
+    personLd(site, about, lang, base),
+    breadcrumbLd([
+      { name: t.home, url: new URL(route('home', lang), base).href },
+      { name: t.infoTitle, url: new URL(route('info', lang), base).href },
+    ]),
+  ]}
+>
+  <header class="wrap grid info-head">
+    <h1 class="display" data-reveal="lines">{t.infoTitle}</h1>
+    <div class="bio" data-reveal-group>
+      <p class="label">{pick(site.jobTitle, lang)} · {pick(site.location, lang)}</p>
+      <div class="lead-text" set:html={rich(bio)} />
+      {approach && <div class="prose muted" set:html={rich(approach)} />}
+      {about.cvUrl && (
+        <p>
+          <a class="btn" href={about.cvUrl}>{t.downloadCv}</a>
+        </p>
+      )}
+    </div>
+  </header>
+
+  {
+    about.timeline.length > 0 && (
+      <section class="wrap grid section block" data-reveal="fade" aria-labelledby="timeline-title">
+        <h2 class="label side-title" id="timeline-title">
+          {t.timeline}
+        </h2>
+        <ol class="timeline" role="list">
+          {about.timeline.map((item) => (
+            <li class="timeline-item">
+              <span class="years label">{years(item.years)}</span>
+              <span class="place">{item.place}</span>
+              <span class="role">
+                {pick(item.role, lang)}
+                {pick(item.note, lang) && <span class="note"> · {pick(item.note, lang)}</span>}
+              </span>
+            </li>
+          ))}
+        </ol>
+      </section>
+    )
+  }
+
+  {
+    about.clientGroups.length > 0 && (
+      <section class="wrap grid section block" data-reveal="fade" aria-labelledby="clients-title">
+        <h2 class="label side-title" id="clients-title">
+          {t.clients}
+        </h2>
+        <div class="client-groups">
+          {about.clientGroups.map((group) => (
+            <div class="group">
+              <h3 class="label">{pick(group.label, lang)}</h3>
+              <ul class="names" role="list">
+                {group.names.map((n) => (
+                  <li>{n}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  {
+    stackGroups.length > 0 && (
+      <section class="wrap grid section block" data-reveal="fade" aria-labelledby="stack-title">
+        <h2 class="label side-title" id="stack-title">
+          {t.stack}
+        </h2>
+        <div class="stack">
+          {stackGroups.map((group) => (
+            <div class="stack-group">
+              <h3 class="stack-label">{pick(group.label, lang)}</h3>
+              <ul class="stack-items" role="list">
+                {group.items.map((item) => (
+                  <li>{pick(item, lang)}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  <section class="contact" id="contacto" aria-labelledby="contact-title" tabindex="-1">
+    <div class="wrap grid">
+      <h2 class="title-xl contact-title" id="contact-title">{pick(site.ctaTitle, lang) || t.contact}</h2>
+      <div class="contact-body">
+        {availability && <p class="lead">{availability}</p>}
+        <ContactList lang={lang} site={site} id="info" />
+      </div>
+    </div>
+  </section>
+</Base>
+
+
+<style>
+  .info-head {
+    row-gap: var(--space-6);
+    padding-block: clamp(var(--space-8), 8vw, var(--space-9)) var(--space-8);
+  }
+
+  .info-head h1,
+  .info-head .bio {
+    grid-column: 1 / -1;
+  }
+
+  .bio {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  .lead-text {
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    max-width: 34ch;
+  }
+
+  .lead-text :global(p + p) {
+    margin-top: 0.8em;
+  }
+
+  @media (min-width: 64rem) {
+    .info-head h1 {
+      grid-column: 1 / span 4;
+    }
+
+    .info-head .bio {
+      grid-column: 5 / -1;
+    }
+  }
+
+  .block {
+    row-gap: var(--space-5);
+    border-top: var(--border);
+    padding-top: var(--space-6);
+  }
+
+  .section + .section {
+    padding-top: var(--space-6);
+  }
+
+  .side-title,
+  .timeline,
+  .client-groups,
+  .stack {
+    grid-column: 1 / -1;
+  }
+
+  @media (min-width: 64rem) {
+    .side-title {
+      grid-column: 1 / span 4;
+    }
+
+    .timeline,
+    .client-groups,
+    .stack {
+      grid-column: 5 / -1;
+    }
+  }
+
+  .timeline-item {
+    display: grid;
+    grid-template-columns: 9rem minmax(0, 1fr);
+    gap: var(--space-1) var(--space-4);
+    padding-block: var(--space-4);
+    border-bottom: var(--border);
+  }
+
+  .timeline-item:first-child {
+    padding-top: 0;
+  }
+
+  .place {
+    font-weight: var(--weight-medium);
+  }
+
+  .role {
+    grid-column: 2;
+    color: var(--muted);
+  }
+
+  @media (max-width: 40rem) {
+    .timeline-item {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .role {
+      grid-column: 1;
+    }
+  }
+
+  .client-groups {
+    display: grid;
+    gap: var(--space-6);
+  }
+
+  .group {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .names {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+    font-size: var(--step-1);
+    line-height: 1.35;
+  }
+
+  .stack {
+    display: grid;
+  }
+
+  .stack-group {
+    display: grid;
+    gap: var(--space-2) var(--gutter);
+    padding-block: var(--space-4);
+    border-bottom: var(--border);
+  }
+
+  .stack-group:first-child {
+    padding-top: 0;
+  }
+
+  @media (min-width: 48rem) {
+    .stack-group {
+      grid-template-columns: 9rem minmax(0, 1fr);
+    }
+  }
+
+  .stack-label {
+    font-size: var(--step-0);
+    font-weight: var(--weight-bold);
+    letter-spacing: -0.01em;
+  }
+
+  .stack-items {
+    display: flex;
+    flex-wrap: wrap;
+    font-size: var(--step-1);
+    line-height: 1.4;
+  }
+
+  .stack-items li:not(:last-child)::after {
+    content: '·';
+    margin-inline: 0.45em;
+    color: var(--muted);
+  }
+
+  .contact {
+    margin: var(--section) var(--gap) 0;
+    padding-block: var(--section);
+    background: var(--surface);
+    border-radius: var(--radius);
+  }
+
+  .contact:focus {
+    outline: none;
+  }
+
+  .contact .grid {
+    row-gap: var(--space-6);
+  }
+
+  .contact-title,
+  .contact-body {
+    grid-column: 1 / -1;
+  }
+
+  .contact-body {
+    display: grid;
+    gap: var(--space-6);
+    align-content: start;
+  }
+
+  @media (min-width: 64rem) {
+    .contact-title {
+      grid-column: 1 / span 6;
+    }
+
+    .contact-body {
+      grid-column: 8 / -1;
+    }
+  }
+
+</style>

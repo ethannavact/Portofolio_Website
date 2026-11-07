@@ -1,0 +1,122 @@
+---
+import type { Lang } from '../../i18n/routes';
+import { pick } from '../../i18n/ui';
+import { richInline } from '../../lib/rich';
+
+interface Props {
+  lang: Lang;
+  value: {
+    heading: { es: string; en: string };
+    numbered: boolean;
+    items: { title: { es: string; en: string }; body: { es: string; en: string } }[];
+  };
+}
+
+const { lang, value } = Astro.props;
+const heading = pick(value.heading, lang);
+const items = value.items.filter((i) => pick(i.title, lang));
+const Tag = value.numbered ? 'ol' : 'ul';
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+
+{
+  items.length > 0 && (
+    <div class="wrap grid list-block">
+      {heading && <h2 class="label list-heading">{heading}</h2>}
+      <Tag class="items" role="list">
+        {items.map((item, i) => (
+          <li class="item">
+            {value.numbered && (
+              <span class="num label" aria-hidden="true">
+                {pad(i + 1)}
+              </span>
+            )}
+            <h3 class="item-title">{pick(item.title, lang)}</h3>
+            {pick(item.body, lang) && <p class="item-body" set:html={richInline(pick(item.body, lang))} />}
+          </li>
+        ))}
+      </Tag>
+    </div>
+  )
+}
+
+<style>
+  .list-block {
+    row-gap: var(--space-5);
+  }
+
+  .list-heading,
+  .items {
+    grid-column: 1 / -1;
+  }
+
+  .list-heading {
+    padding-top: 0.45em;
+  }
+
+  /* Una fila por elemento: funciona con cualquier cantidad, sin huérfanos. */
+  .items {
+    display: grid;
+  }
+
+  .item {
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    gap: var(--space-2) var(--space-3);
+    padding-block: var(--space-4);
+    border-top: var(--border);
+  }
+
+  .item:last-child {
+    border-bottom: var(--border);
+  }
+
+  .num {
+    padding-top: 0.35em;
+  }
+
+  .item-title {
+    font-size: var(--step-1);
+  }
+
+  .item-body {
+    grid-column: 2;
+    color: var(--muted);
+  }
+
+  .items:not(ol) .item {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .items:not(ol) .item-body {
+    grid-column: 1;
+  }
+
+  @media (min-width: 72rem) {
+    ol.items .item {
+      grid-template-columns: 2.5rem minmax(0, 2fr) minmax(0, 3fr);
+    }
+
+    ol.items .item-body {
+      grid-column: 3;
+    }
+
+    .items:not(ol) .item {
+      grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    }
+
+    .items:not(ol) .item-body {
+      grid-column: 2;
+    }
+  }
+
+  @media (min-width: 56rem) {
+    .list-heading {
+      grid-column: 1 / span 4;
+    }
+
+    .items {
+      grid-column: 5 / -1;
+    }
+  }
+</style>

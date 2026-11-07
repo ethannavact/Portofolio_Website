@@ -1,0 +1,93 @@
+name: Animación para marcas
+published: true
+order: 80
+title:
+  es: Animación para marcas
+  en: Brand animation
+tagline:
+  es: Animación 3D y personajes para campañas, redes, pantallas y eventos.
+  en: 3D animation and characters for campaigns, social, screens and events.
+intro:
+  es: >-
+    Hago animación 3D para marcas: productos, personajes, mundos y efectos que
+    explican una idea o la vuelven memorable. Puede ser una pieza para redes, un
+    loop para pantallas, el momento del gol en un estadio o un concierto dentro
+    de un videojuego.
+
+
+    Adapto el estilo a la marca y al canal, del fotorrealismo a un look más
+    gráfico, y entrego en todos los formatos que la campaña necesita.
+  en: >-
+    I make 3D animation for brands: products, characters, worlds and effects
+    that explain an idea or make it memorable. It can be a social piece, a loop
+    for screens, the goal moment in a stadium or a concert inside a video game.
+
+
+    I adapt the style to the brand and the channel, from photoreal to more
+    graphic, and deliver in every format the campaign needs.
+fit:
+  - es: Una campaña necesita piezas 3D de producto o de personaje.
+    en: A campaign needs 3D product or character pieces.
+  - es: Buscas contenido animado para redes que se distinga del resto.
+    en: You want animated social content that stands out.
+  - es: Necesitas loops o animaciones para pantallas de evento o punto de venta.
+    en: You need loops or animations for event or retail screens.
+includes:
+  - title:
+      es: Diseño de estilo
+      en: Style design
+    body:
+      es: Look, personajes y referencias aprobados antes de animar.
+      en: Look, characters and references approved before animating.
+  - title:
+      es: Modelado y animación 3D
+      en: 3D modeling and animation
+    body:
+      es: Productos, personajes, entornos y efectos.
+      en: Products, characters, environments and effects.
+  - title:
+      es: Captura de movimiento
+      en: Motion capture
+    body:
+      es: Movimiento de personas reales para personajes digitales.
+      en: Real human movement for digital characters.
+  - title:
+      es: Entregables por canal
+      en: Deliverables per channel
+    body:
+      es: Versiones y formatos para cada plataforma.
+      en: Versions and formats for each platform.
+process:
+  - title:
+      es: Estilo
+      en: Style
+    body:
+      es: Referencias y frames clave.
+      en: References and key frames.
+  - title:
+      es: Animática
+      en: Animatic
+    body:
+      es: Ritmo y encuadres aprobados.
+      en: Pacing and framing approved.
+  - title:
+      es: Producción
+      en: Production
+    body:
+      es: Animación, efectos y render.
+      en: Animation, effects and rendering.
+  - title:
+      es: Entrega
+      en: Delivery
+    body:
+      es: Versiones por formato.
+      en: Versions per format.
+projects:
+  - hbo-vgly-season-2
+  - aicm-cylindrical-screens
+  - pumas-unam-goal-animation
+  - coca-cola-flow-fest-sprite
+  - mary-kay-christmas-fooh
+reviewNotes: >-
+  Copy provisional: se reescribe junto con la identidad (target: agencias y
+  marcas, sin jerga técnica).

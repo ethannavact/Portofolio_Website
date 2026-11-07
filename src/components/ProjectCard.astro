@@ -1,0 +1,160 @@
+---
+import Media from './media/Media.astro';
+import { caseRoute, type Lang } from '../i18n/routes';
+import { pick, ui } from '../i18n/ui';
+import type { Project } from '../lib/projects';
+import { DISCIPLINES } from '../lib/taxonomy';
+
+interface Props {
+  lang: Lang;
+  project: Project;
+  size?: 'large' | 'regular';
+  headingLevel?: 'h2' | 'h3';
+  eager?: boolean;
+  /** Proporción de la portada en la tarjeta. */
+  aspect?: string;
+  /** Desplazamiento de parallax en px (composición dinámica). */
+  parallax?: number;
+}
+
+const { lang, project, size = 'regular', headingLevel = 'h3', eager = false, aspect = '16/10', parallax } = Astro.props;
+const t = ui(lang);
+const d = project.data;
+const title = pick(d.title, lang);
+const disciplines = d.disciplines.map((v) => DISCIPLINES.find((x) => x.value === v)?.[lang]).filter(Boolean);
+const Heading = headingLevel;
+const sizes = size === 'large' ? '(min-width: 56rem) 46vw, 92vw' : '(min-width: 72rem) 31vw, (min-width: 40rem) 46vw, 92vw';
+---
+
+<article
+  class:list={['card', `card--${size}`]}
+  data-disciplines={d.disciplines.join(' ')}
+  data-parallax={parallax}
+>
+  <div class="card-visual">
+    <Media
+      lang={lang}
+      image={d.cover}
+      alt={pick(d.coverAlt, lang) || title}
+      aspect={aspect}
+      crop
+      sizes={sizes}
+      eager={eager}
+      note={d.coverNote}
+      class="card-media"
+      transitionName={`cover-${project.id}`}
+    />
+  </div>
+  <div class="card-body">
+    <p class="label meta">
+      <span>{d.client}</span>
+      {d.year && <span>{d.year}</span>}
+    </p>
+    <Heading class="card-title">
+      <a href={caseRoute(project.id, lang)} class="card-link">{title}</a>
+    </Heading>
+    {pick(d.summary, lang) && <p class="summary">{pick(d.summary, lang)}</p>}
+    <p class="label tags">
+      {d.kind === 'concept' && <span class="badge">{t.concept}</span>}
+      {d.kind === 'personal' && <span class="badge">{t.personal}</span>}
+      {!d.published && <span class="badge badge--draft">{t.draft}</span>}
+      {disciplines.slice(0, 2).map((x) => <span>{x}</span>)}
+    </p>
+  </div>
+</article>
+
+<style>
+  .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .card-visual {
+    position: relative;
+  }
+
+  .card :global(.card-media img) {
+    transition: transform var(--dur-3) var(--ease-out);
+  }
+
+  .card:hover :global(.card-media img) {
+    transform: scale(1.025);
+  }
+
+  .card-body {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .card-visual :global(.media) {
+    border-radius: var(--radius);
+  }
+
+  .meta {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+
+  .card-title {
+    font-size: var(--step-2);
+    line-height: 1.12;
+  }
+
+  .card--large .card-title {
+    font-size: var(--step-3);
+  }
+
+  .card-link {
+    text-decoration: none;
+  }
+
+  /* Toda la tarjeta es clicable; el nombre accesible es solo el título. */
+  .card-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+  }
+
+  .card:hover .card-link {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+
+  .card-link:focus-visible {
+    outline: none;
+  }
+
+  .card:has(.card-link:focus-visible) {
+    outline: 2px solid var(--focus);
+    outline-offset: 6px;
+  }
+
+  .summary {
+    color: var(--muted);
+    max-width: 52ch;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin-top: var(--space-1);
+  }
+
+  .badge {
+    color: var(--fg);
+    border: var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0 var(--space-2);
+  }
+
+  .badge--draft {
+    border-color: var(--draft);
+    color: var(--draft);
+  }
+</style>

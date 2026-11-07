@@ -1,0 +1,291 @@
+---
+// Video con "facade": hasta que alguien presiona Reproducir no se carga
+// nada de YouTube/Vimeo (mejor rendimiento y privacidad).
+// Archivos propios: loop mudo con botón de pausa, o reproductor con controles.
+import { Picture } from 'astro:assets';
+import { imageUrl, isRemote, remoteSrcset, type AnyImage } from '../../lib/images';
+import Placeholder from './Placeholder.astro';
+import type { Lang } from '../../i18n/routes';
+import { pick, ui } from '../../i18n/ui';
+import { IS_PREVIEW, SHOW_DRAFTS } from '../../lib/env';
+
+interface Props {
+  lang: Lang;
+  video: {
+    provider: 'none' | 'youtube' | 'vimeo' | 'file';
+    id: string;
+    url: string;
+    title: { es: string; en: string };
+    aspect: string;
+    loop: boolean;
+    poster?: AnyImage;
+    sources?: { src: string; width: number; height: number; type: string }[];
+  };
+  fallbackTitle: string;
+  note?: string;
+  eager?: boolean;
+  sizes?: string;
+}
+
+const { lang, video, fallbackTitle, note = '', eager = false, sizes = '(min-width: 1680px) 1560px, 92vw' } = Astro.props;
+const t = ui(lang);
+const title = pick(video.title, lang) || fallbackTitle;
+const provider = video.provider;
+const id = video.id.trim();
+const fileUrl = video.url.trim();
+
+const hasVideo = (provider === 'youtube' || provider === 'vimeo') ? Boolean(id) : provider === 'file' ? Boolean(fileUrl) : false;
+
+const embedSrc =
+  provider === 'youtube'
+    ? `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&playsinline=1`
+    : provider === 'vimeo'
+      ? `https://player.vimeo.com/video/${encodeURIComponent(id)}?autoplay=1&dnt=1&title=0&byline=0`
+      : '';
+
+const watchUrl =
+  provider === 'youtube'
+    ? `https://www.youtube.com/watch?v=${encodeURIComponent(id)}`
+    : provider === 'vimeo'
+      ? `https://vimeo.com/${encodeURIComponent(id)}`
+      : fileUrl;
+
+const providerName = provider === 'youtube' ? 'YouTube' : provider === 'vimeo' ? 'Vimeo' : '';
+const remoteThumb = provider === 'youtube' && !IS_PREVIEW ? `https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg` : '';
+const posterUrl = video.poster ? await imageUrl(video.poster, 1920) : undefined;
+const remotePoster = isRemote(video.poster) ? video.poster : null;
+// Archivos del estudio: SD en pantallas chicas, HD en el resto.
+const sources = video.sources?.length ? [...video.sources].sort((a, b) => a.width - b.width) : [];
+---
+
+{
+  !hasVideo ? (
+    SHOW_DRAFTS && <Placeholder lang={lang} aspect={video.aspect} note={note || title} kind="video" />
+  ) : provider === 'file' ? (
+    video.loop ? (
+      <div class="video loop" style={`--ratio: ${video.aspect}`} data-loop-video>
+        {sources.length > 1 ? (
+          <video muted loop playsinline preload="metadata" poster={posterUrl} aria-label={title} crossorigin="anonymous">
+            {sources.map((s, i) => <source src={s.src} type={s.type} media={i < sources.length - 1 ? '(max-width: 900px)' : undefined} />)}
+          </video>
+        ) : (
+          <video muted loop playsinline preload="metadata" poster={posterUrl} aria-label={title} src={fileUrl} crossorigin="anonymous" />
+        )}
+        <button class="loop-toggle label" type="button" aria-pressed="false" data-label-play={t.resume} data-label-pause={t.pause}>
+          {t.resume}
+        </button>
+      </div>
+    ) : (
+      <div class="video" style={`--ratio: ${video.aspect}`}>
+        {sources.length > 1 ? (
+          <video controls playsinline preload="none" poster={posterUrl} aria-label={title}>
+            {sources.map((s, i) => <source src={s.src} type={s.type} media={i < sources.length - 1 ? '(max-width: 900px)' : undefined} />)}
+          </video>
+        ) : (
+          <video controls playsinline preload="none" poster={posterUrl} aria-label={title} src={fileUrl} />
+        )}
+      </div>
+    )
+  ) : (
+    <div class="video facade" style={`--ratio: ${video.aspect}`} data-embed={IS_PREVIEW ? undefined : embedSrc} data-embed-title={title}>
+      {remotePoster ? (
+        <img class="poster" src={remotePoster.src} srcset={remoteSrcset(remotePoster)} sizes={sizes} alt="" width={remotePoster.width} height={remotePoster.height} loading={eager ? 'eager' : 'lazy'} decoding="async" />
+      ) : video.poster && !isRemote(video.poster) ? (
+        <Picture
+          src={video.poster}
+          alt=""
+          formats={['webp']}
+          widths={[768, 1440, 1920].filter((w) => w <= (video.poster?.width ?? 1920))}
+          sizes={sizes}
+          loading={eager ? 'eager' : 'lazy'}
+          class="poster"
+        />
+      ) : remoteThumb ? (
+        <img class="poster" src={remoteThumb} alt="" loading={eager ? 'eager' : 'lazy'} decoding="async" width="480" height="360" />
+      ) : (
+        <div class="poster blank" aria-hidden="true" />
+      )}
+      <div class="scrim" aria-hidden="true" />
+      {IS_PREVIEW ? (
+        <a class="play" href={watchUrl} target="_blank" rel="noopener">
+          <span class="icon" aria-hidden="true" />
+          <span>
+            {t.watchOn} {providerName}: {title}
+            <span class="sr-only"> {t.opensNewTab}</span>
+          </span>
+        </a>
+      ) : (
+        <button class="play" type="button" aria-label={`${t.playVideo}: ${title}`}>
+          <span class="icon" aria-hidden="true" />
+          <span aria-hidden="true">{t.play}</span>
+        </button>
+      )}
+      <noscript>
+        <a class="play" href={watchUrl}>
+          {t.watchOn} {providerName}
+        </a>
+      </noscript>
+    </div>
+  )
+}
+
+<script>
+  // Facade → iframe al presionar Reproducir.
+  document.querySelectorAll<HTMLElement>('.facade[data-embed]').forEach((box) => {
+    const button = box.querySelector<HTMLButtonElement>('button.play');
+    button?.addEventListener('click', () => {
+      const iframe = document.createElement('iframe');
+      iframe.src = box.dataset.embed ?? '';
+      iframe.title = box.dataset.embedTitle ?? '';
+      iframe.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+      iframe.allowFullscreen = true;
+      iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+      box.replaceChildren(iframe);
+      box.classList.add('is-playing');
+      iframe.focus();
+    });
+  });
+
+  // Loops propios: solo corren visibles y con movimiento activo; siempre se pueden pausar.
+  const loops = document.querySelectorAll<HTMLElement>('[data-loop-video]');
+  const motionOn = () => document.documentElement.dataset.motion !== 'off';
+
+  loops.forEach((box) => {
+    const video = box.querySelector('video');
+    const toggle = box.querySelector<HTMLButtonElement>('.loop-toggle');
+    if (!video || !toggle) return;
+    let userPaused = false;
+    let visible = false;
+
+    const render = () => {
+      const playing = !video.paused;
+      toggle.setAttribute('aria-pressed', String(playing));
+      toggle.textContent = playing ? (toggle.dataset.labelPause ?? '') : (toggle.dataset.labelPlay ?? '');
+    };
+
+    const update = () => {
+      if (visible && motionOn() && !userPaused) video.play().catch(() => {});
+      else video.pause();
+    };
+
+    video.addEventListener('play', render);
+    video.addEventListener('pause', render);
+
+    toggle.addEventListener('click', () => {
+      if (video.paused) {
+        userPaused = false;
+        video.play().catch(() => {});
+      } else {
+        userPaused = true;
+        video.pause();
+      }
+    });
+
+    new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      update();
+    }, { threshold: 0.25 }).observe(box);
+
+    document.addEventListener('motionchange', update);
+    render();
+  });
+</script>
+
+<style>
+  .video {
+    position: relative;
+    aspect-ratio: var(--ratio);
+    max-width: 100%;
+    width: 100%;
+    background: var(--surface-2);
+    overflow: hidden;
+  }
+
+  .video video,
+  .video :global(iframe),
+  .video .poster,
+  .video :global(.poster img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    object-fit: cover;
+  }
+
+  .video :global(picture.poster),
+  .video :global(.poster) {
+    display: block;
+  }
+
+  .blank {
+    background:
+      radial-gradient(120% 90% at 30% 20%, color-mix(in srgb, var(--fg) 10%, transparent), transparent 60%),
+      var(--surface-2);
+  }
+
+  .scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, var(--scrim), transparent 55%);
+    pointer-events: none;
+  }
+
+  .play {
+    position: absolute;
+    left: clamp(var(--space-4), 2.5vw, var(--space-6));
+    bottom: clamp(var(--space-4), 2.5vw, var(--space-6));
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 48px;
+    padding: 0 var(--space-5) 0 var(--space-3);
+    border: 1px solid rgb(255 255 255 / 0.7);
+    border-radius: var(--radius);
+    background: rgb(0 0 0 / 0.62);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    color: #fff;
+    font-size: var(--step-0);
+    font-weight: var(--weight-medium);
+    text-decoration: none;
+    transition: background-color var(--dur-2) var(--ease-out);
+  }
+
+  .play:hover {
+    background: rgb(0 0 0 / 0.82);
+  }
+
+  .icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #fff;
+    position: relative;
+    flex: none;
+  }
+
+  .icon::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 54%;
+    transform: translate(-50%, -50%);
+    border-style: solid;
+    border-width: 7px 0 7px 11px;
+    border-color: transparent transparent transparent #111;
+  }
+
+  .loop-toggle {
+    position: absolute;
+    right: var(--space-3);
+    bottom: var(--space-3);
+    min-height: 36px;
+    min-width: 44px;
+    padding: 0 var(--space-3);
+    border: 1px solid rgb(255 255 255 / 0.6);
+    border-radius: var(--radius);
+    background: rgb(0 0 0 / 0.65);
+    color: #fff;
+  }
+</style>

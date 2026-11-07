@@ -1,0 +1,168 @@
+---
+import { imageUrl } from '../lib/images';
+import Base from '../layouts/Base.astro';
+import Ruleta from '../components/Ruleta.astro';
+import { alternatesFor, caseRoute, route, type Lang } from '../i18n/routes';
+import { pick, ui } from '../i18n/ui';
+import { getProjects } from '../lib/projects';
+import { breadcrumbLd } from '../lib/seo';
+import { DISCIPLINES } from '../lib/taxonomy';
+import { placeholderFor } from '../lib/placeholders';
+import { SHOW_DRAFTS } from '../lib/env';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = ui(lang);
+const projects = await getProjects();
+const base = Astro.site ?? new URL(Astro.url.origin);
+
+// Solo se muestran filtros con al menos un proyecto.
+const used = new Set(projects.flatMap((p) => p.data.disciplines));
+const filters = DISCIPLINES.filter((d) => used.has(d.value));
+const disciplineLabel = (v: string) => DISCIPLINES.find((d) => d.value === v)?.[lang] ?? v;
+
+// Vista previa (junto al cursor) de cada fila del índice.
+const rowMedia = await Promise.all(
+  projects.map(async (p) => {
+    const img = p.data.cover ?? (SHOW_DRAFTS ? placeholderFor(p.data.coverNote || pick(p.data.coverAlt, lang) || pick(p.data.title, lang)) : undefined);
+    return img ? { preview: await imageUrl(img, 768, { quality: 78 }) } : {};
+  }),
+);
+---
+
+<Base
+  lang={lang}
+  title={t.workTitle}
+  description={t.workIntro}
+  alternates={alternatesFor('work')}
+  current="work"
+  jsonLd={[
+    breadcrumbLd([
+      { name: t.home, url: new URL(route('home', lang), base).href },
+      { name: t.workTitle, url: new URL(route('work', lang), base).href },
+    ]),
+  ]}
+>
+  <Ruleta
+    lang={lang}
+    projects={projects}
+    id="trabajo"
+    title={t.workTitle}
+    headingLevel="h1"
+    filters={filters.map((f) => ({ value: f.value, label: f[lang] }))}
+  />
+  <p class="sr-only">{t.workIntro}</p>
+
+  <section class="wrap index section" aria-labelledby="index-title">
+    <h2 class="label index-title" id="index-title">{t.indexTitle}</h2>
+    <div class="table-wrap" data-lenis-prevent>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">{t.indexProject}</th>
+            <th scope="col">{t.indexClient}</th>
+            <th scope="col">{t.indexDiscipline}</th>
+            <th scope="col">{t.indexYear}</th>
+          </tr>
+        </thead>
+        <tbody data-index-rows>
+          {
+            projects.map((p, i) => (
+              <tr data-preview-src={rowMedia[i]?.preview} data-disciplines={p.data.disciplines.join(' ')}>
+                <th scope="row">
+                  <a href={caseRoute(p.id, lang)}>{pick(p.data.title, lang)}</a>
+                  {!p.data.published && <span class="label draft"> · {t.draft}</span>}
+                </th>
+                <td>{p.data.client}</td>
+                <td>{p.data.disciplines.slice(0, 2).map(disciplineLabel).join(' · ')}</td>
+                <td class="year">{p.data.year}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</Base>
+
+<script>
+  // El índice sigue a los filtros de la ruleta.
+  const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-index-rows] > tr'));
+  document.addEventListener('ruleta:filter', (event) => {
+    const value = (event as CustomEvent<string>).detail;
+    rows.forEach((row) => {
+      row.hidden = value !== 'all' && !(row.dataset.disciplines ?? '').split(' ').includes(value);
+    });
+  });
+</script>
+
+<style>
+  :global(#trabajo) {
+    margin-top: var(--gap);
+  }
+
+  .index-title {
+    margin-bottom: var(--space-4);
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    min-width: 36rem;
+    border-collapse: collapse;
+    font-size: var(--step-0);
+  }
+
+  th,
+  td {
+    text-align: left;
+    padding: var(--space-3) var(--space-4) var(--space-3) 0;
+    border-top: var(--border);
+    vertical-align: baseline;
+  }
+
+  thead th {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    font-weight: var(--weight-regular);
+    letter-spacing: var(--label-tracking);
+    text-transform: uppercase;
+    color: var(--muted);
+    border-top: 0;
+  }
+
+  tbody th {
+    font-weight: var(--weight-medium);
+  }
+
+  tbody th a {
+    text-decoration: none;
+  }
+
+  tbody th a:hover {
+    text-decoration: underline;
+  }
+
+  td {
+    color: var(--muted);
+  }
+
+  .year {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .draft {
+    color: var(--draft);
+  }
+
+  tbody tr[hidden] {
+    display: none;
+  }
+</style>

@@ -1,0 +1,100 @@
+name: Dirección de arte
+published: true
+order: 100
+title:
+  es: Dirección de arte
+  en: Art direction
+tagline:
+  es: 'El lenguaje visual de un proyecto: cómo se ve, cómo se siente y por qué.'
+  en: 'A project’s visual language: how it looks, how it feels and why.'
+intro:
+  es: >-
+    Defino el look de proyectos para marcas y artistas: paleta, luz, materiales,
+    composición, personajes y referencias. Lo traduzco en guías claras para que
+    el equipo produzca con un mismo criterio, y reviso cada pieza hasta que
+    queda.
+
+
+    Me adapto a la identidad de cada cliente. Lo constante es el cuidado por el
+    detalle y que cada decisión visual tenga una razón ligada a la marca y a lo
+    que tiene que comunicar.
+  en: >-
+    I define the look of projects for brands and artists: palette, light,
+    materials, composition, characters and references. I turn it into clear
+    guides so the team produces with one standard, and I review every piece
+    until it’s right.
+
+
+    I adapt to each client’s identity. What stays constant is care for detail
+    and a reason behind every visual decision, tied to the brand and what it
+    needs to say.
+fit:
+  - es: Tienes el concepto y necesitas definir cómo se va a ver.
+    en: You have the concept and need to define how it will look.
+  - es: >-
+      Un proyecto con varios artistas o proveedores necesita un solo criterio
+      visual.
+    en: A project with several artists or vendors needs one visual standard.
+  - es: Una activación o juego tiene que verse a la altura de la marca.
+    en: An activation or game has to look as good as the brand.
+includes:
+  - title:
+      es: Referencias
+      en: References
+    body:
+      es: Moodboards y dirección inicial.
+      en: Moodboards and initial direction.
+  - title:
+      es: Exploración de look
+      en: Look development
+    body:
+      es: Frames clave y pruebas de estilo antes de producir.
+      en: Key frames and style tests before production.
+  - title:
+      es: Guía visual
+      en: Visual guide
+    body:
+      es: Paleta, tipografía, luz, materiales y reglas.
+      en: Palette, type, light, materials and rules.
+  - title:
+      es: Supervisión
+      en: Supervision
+    body:
+      es: Revisión de piezas y retroalimentación al equipo hasta la entrega.
+      en: Reviewing pieces and giving the team feedback through delivery.
+process:
+  - title:
+      es: Referencias
+      en: References
+    body:
+      es: Qué debe sentir el público.
+      en: What the audience should feel.
+  - title:
+      es: Exploración
+      en: Exploration
+    body:
+      es: Varias direcciones y una elegida.
+      en: Several directions, one chosen.
+  - title:
+      es: Guía
+      en: Guide
+    body:
+      es: Reglas claras para producir.
+      en: Clear rules for production.
+  - title:
+      es: Supervisión
+      en: Supervision
+    body:
+      es: Revisión hasta la entrega.
+      en: Review through delivery.
+projects:
+  - porsche-launch
+  - takis-coachella
+  - fud-cheese-rush
+  - santa-fe-klan-claves
+  - viva-aerobus-airplane-game
+  - taf-vr-world-cup
+  - coca-cola-flow-fest-sprite
+reviewNotes: >-
+  Copy provisional: se reescribe junto con la identidad (target: agencias y
+  marcas, sin jerga técnica).

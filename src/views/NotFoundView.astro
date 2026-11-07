@@ -1,0 +1,40 @@
+---
+import Base from '../layouts/Base.astro';
+import { alternatesFor, route, type Lang } from '../i18n/routes';
+import { ui } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = ui(lang);
+const other = ui(lang === 'es' ? 'en' : 'es');
+---
+
+<Base lang={lang} title={t.notFoundTitle} description={t.notFoundBody} alternates={alternatesFor('home')} noindex>
+  <section class="wrap nf">
+    <p class="label">404</p>
+    <h1 class="display">{t.notFoundTitle}</h1>
+    <p class="lead">{t.notFoundBody}</p>
+    <p class="lead muted" lang={lang === 'es' ? 'en' : 'es-MX'}>{other.notFoundBody}</p>
+    <div class="actions">
+      <a class="btn btn--solid" href={route('home', lang)}>{t.backHome}</a>
+      <a class="btn" href={route('work', lang)}>{t.allWork}</a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .nf {
+    display: grid;
+    gap: var(--space-5);
+    padding-block: var(--section);
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+</style>

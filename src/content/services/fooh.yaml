@@ -1,0 +1,101 @@
+name: FOOH
+published: true
+order: 60
+title:
+  es: FOOH
+  en: FOOH
+tagline:
+  es: >-
+    Videos donde algo imposible pasa en un lugar real de la ciudad, pensados
+    para detener el scroll.
+  en: >-
+    Videos where something impossible happens in a real place in the city, made
+    to stop the scroll.
+intro:
+  es: >-
+    El FOOH (fake out of home) mezcla una toma real de la calle con efectos
+    visuales: un robot que aterriza en un edificio, un espectacular que
+    revienta, una fachada que se vuelve fábrica. Funciona porque la gente
+    reconoce el lugar y no puede creer lo que ve.
+
+
+    Me encargo de la idea, la toma y los efectos, con el realismo necesario para
+    que la pieza se comparta y la marca quede como protagonista. El público sabe
+    que es ficción, y justo por eso la disfruta y la comparte.
+  en: >-
+    FOOH (fake out of home) blends a real street shot with visual effects: a
+    robot landing on a building, a billboard bursting, a façade turning into a
+    factory. It works because people recognize the place and can’t believe what
+    they see.
+
+
+    I handle the idea, the shot and the effects, with the realism a piece needs
+    to be shared while the brand stays the hero. The audience knows it’s
+    fiction, and that is exactly why they enjoy it and pass it on.
+fit:
+  - es: >-
+      Un estreno, lanzamiento o festival que necesita una pieza viral para
+      redes.
+    en: A premiere, launch or festival that needs a viral piece for social.
+  - es: Quieres el impacto de un espectacular gigante sin producirlo en físico.
+    en: You want the impact of a giant billboard without building it.
+  - es: La marca quiere aparecer en un lugar icónico de la ciudad.
+    en: The brand wants to show up in an iconic place in the city.
+includes:
+  - title:
+      es: Idea y guion
+      en: Idea and script
+    body:
+      es: Qué pasa, dónde y cómo se revela la marca.
+      en: What happens, where, and how the brand is revealed.
+  - title:
+      es: Toma
+      en: Plate
+    body:
+      es: Locación, ángulo y grabación pensados para los efectos.
+      en: Location, angle and shoot planned for the effects.
+  - title:
+      es: Efectos visuales
+      en: Visual effects
+    body:
+      es: Destrucción, simulación, personajes y composición fotorrealista.
+      en: Destruction, simulation, characters and photoreal compositing.
+  - title:
+      es: Versiones
+      en: Versions
+    body:
+      es: Formatos verticales y horizontales para cada red.
+      en: Vertical and horizontal formats for each platform.
+process:
+  - title:
+      es: Idea
+      en: Idea
+    body:
+      es: Concepto y locación.
+      en: Concept and location.
+  - title:
+      es: Animática
+      en: Animatic
+    body:
+      es: Movimiento y tiempos aprobados antes de producir.
+      en: Motion and timing approved before production.
+  - title:
+      es: Producción
+      en: Production
+    body:
+      es: Grabación, efectos y composición.
+      en: Shoot, effects and compositing.
+  - title:
+      es: Entrega
+      en: Delivery
+    body:
+      es: Versiones finales listas para pautar.
+      en: Final versions ready for paid media.
+projects:
+  - netflix-atlas
+  - axe-ceremonia-2024
+  - axe-ceremonia-2023-metro
+  - mary-kay-christmas-fooh
+reviewNotes: >-
+  Copy provisional: se reescribe junto con la identidad (target: agencias y
+  marcas, sin jerga técnica).

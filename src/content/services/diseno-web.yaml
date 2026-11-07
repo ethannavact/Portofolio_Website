@@ -1,0 +1,106 @@
+name: Diseño y programación web
+published: true
+order: 120
+title:
+  es: Diseño y programación web
+  en: Web design and development
+tagline:
+  es: >-
+    Sitios y experiencias web para marcas, de una landing de campaña a una web
+    app conectada a la tienda.
+  en: >-
+    Websites and web experiences for brands, from a campaign landing page to a
+    web app connected to the store.
+intro:
+  es: >-
+    Diseño y programo sitios a la medida: landings de campaña, micrositios con
+    3D e interacción, y web apps que conectan una experiencia física con la
+    compra en línea. Cuido que carguen rápido, se vean bien en el celular y sean
+    accesibles.
+
+
+    Cuando el proyecto lo pide, la web es una puerta más al mismo mundo de la
+    campaña: lo que empieza en el evento continúa en el teléfono.
+  en: >-
+    I design and build custom sites: campaign landing pages, microsites with 3D
+    and interaction, and web apps that connect a physical experience to online
+    shopping. I make sure they load fast, look right on a phone and are
+    accessible.
+
+
+    When the project calls for it, the web is one more door into the campaign’s
+    world: what starts at the event continues on the phone.
+fit:
+  - es: Una campaña necesita una landing hecha a la medida de la idea.
+    en: A campaign needs a landing page made for the idea.
+  - es: Una activación física tiene que continuar en el celular del visitante.
+    en: A physical activation has to continue on the visitor’s phone.
+  - es: >-
+      Quieres un sitio con 3D o interacción que siga siendo rápido y fácil de
+      usar.
+    en: You want a site with 3D or interaction that stays fast and easy to use.
+includes:
+  - title:
+      es: Diseño de experiencia e interfaz
+      en: UX and UI design
+    body:
+      es: Estructura, recorrido y diseño visual de cada pantalla.
+      en: Structure, flow and visual design for every screen.
+  - title:
+      es: Desarrollo
+      en: Development
+    body:
+      es: Programación, editor de contenido y publicación.
+      en: Code, content editor and launch.
+  - title:
+      es: 3D e interacción
+      en: 3D and interaction
+    body:
+      es: Elementos interactivos que no sacrifican velocidad.
+      en: Interactive elements that don’t cost speed.
+  - title:
+      es: Conexión con venta o registro
+      en: Sales or sign-up connection
+    body:
+      es: Formularios, datos y enlace a la tienda en línea.
+      en: Forms, data and links to the online store.
+  - title:
+      es: Accesibilidad y rendimiento
+      en: Accessibility and performance
+    body:
+      es: Sitios que cualquiera puede usar y que cargan rápido.
+      en: Sites anyone can use that load fast.
+process:
+  - title:
+      es: Estructura
+      en: Structure
+    body:
+      es: Contenido, páginas y objetivos.
+      en: Content, pages and goals.
+  - title:
+      es: Diseño
+      en: Design
+    body:
+      es: Pantallas clave aprobadas.
+      en: Key screens approved.
+  - title:
+      es: Desarrollo
+      en: Development
+    body:
+      es: Construcción y pruebas.
+      en: Build and testing.
+  - title:
+      es: Publicación
+      en: Launch
+    body:
+      es: Lanzamiento y entrega del editor.
+      en: Launch and editor handover.
+projects:
+  - nike-is-a-girl-momento-magico
+reviewNotes: >-
+  Copy provisional: se reescribe junto con la identidad (target: agencias y
+  marcas, sin jerga técnica).
+
+
+  Un solo ejemplo (MIRROR MIRROR en NIAG). Considera sumar este sitio u otro
+  proyecto web como caso.

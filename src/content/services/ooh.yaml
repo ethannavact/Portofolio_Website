@@ -1,0 +1,105 @@
+name: OOH
+published: true
+order: 70
+title:
+  es: OOH
+  en: OOH
+tagline:
+  es: >-
+    Contenido para pantallas en aeropuertos, estadios y espectaculares que se ve
+    desde lejos y se recuerda.
+  en: >-
+    Content for screens in airports, stadiums and billboards that reads from
+    afar and sticks.
+intro:
+  es: >-
+    Diseño piezas para pantallas en espacios físicos: anamórficos que parecen
+    salir de la pantalla, animaciones para estadios y contenido para formatos
+    poco comunes. Cada pieza se piensa para el lugar, la distancia y el tiempo
+    que la gente la ve.
+
+
+    Entrego listo para reproducir en el formato exacto de cada pantalla, con
+    versiones y calendario cuando la pieza vive meses.
+  en: >-
+    I design pieces for screens in physical spaces: anamorphic content that
+    seems to leap out of the screen, stadium animations and content for unusual
+    formats. Each piece is designed for the place, the viewing distance and how
+    long people look at it.
+
+
+    I deliver ready to play in each screen’s exact format, with versions and a
+    schedule when a piece runs for months.
+fit:
+  - es: >-
+      Tienes inventario de pantallas y necesitas contenido que haga que la gente
+      se detenga.
+    en: You have screen inventory and need content that makes people stop.
+  - es: >-
+      Una marca compra un espacio icónico y quiere un efecto que justifique la
+      inversión.
+    en: >-
+      A brand buys an iconic placement and wants an effect that justifies the
+      spend.
+  - es: Un estadio o recinto necesita animaciones para sus momentos clave.
+    en: A stadium or venue needs animations for its key moments.
+includes:
+  - title:
+      es: Concepto por espacio
+      en: Site-specific concept
+    body:
+      es: Una idea pensada para el lugar, el público y el tiempo de exposición.
+      en: An idea designed for the place, the audience and viewing time.
+  - title:
+      es: Anamórficos y efectos 3D
+      en: Anamorphic and 3D effects
+    body:
+      es: Ilusión de profundidad en pantallas curvas o en esquina.
+      en: The illusion of depth on curved or corner screens.
+  - title:
+      es: Animación y diseño
+      en: Animation and design
+    body:
+      es: Piezas en loop o con narrativa corta.
+      en: Loops or short narrative pieces.
+  - title:
+      es: Formatos técnicos
+      en: Technical formats
+    body:
+      es: Resolución, duración y archivo exactos para cada pantalla.
+      en: Exact resolution, duration and file for every screen.
+process:
+  - title:
+      es: Espacio
+      en: Space
+    body:
+      es: Pantalla, punto de vista y contexto.
+      en: Screen, viewpoint and context.
+  - title:
+      es: Concepto
+      en: Concept
+    body:
+      es: Idea y prueba de efecto.
+      en: Idea and effect test.
+  - title:
+      es: Producción
+      en: Production
+    body:
+      es: Animación y revisiones.
+      en: Animation and reviews.
+  - title:
+      es: Entrega
+      en: Delivery
+    body:
+      es: Archivos finales y calendario de rotación.
+      en: Final files and rotation schedule.
+projects:
+  - aicm-cylindrical-screens
+  - pumas-unam-goal-animation
+reviewNotes: >-
+  Copy provisional: se reescribe junto con la identidad (target: agencias y
+  marcas, sin jerga técnica).
+
+
+  Solo dos ejemplos (AICM publicado). Los demos de marcas en AICM se muestran
+  como demos, no como clientes.
