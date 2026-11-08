@@ -5,7 +5,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText } from 'gsap/SplitText';
 import Lenis from 'lenis';
-import { finePointer, isMotion, onIdle, root, state } from './core';
+import { finePointer, frameHooks, isMotion, onIdle, root, state } from './core';
 import { initScrollFx, killScrollFx } from './scroll';
 import { initPreview } from './preview';
 import { initRuleta } from './ruleta';
@@ -38,6 +38,7 @@ if (captureFps) gsap.ticker.fps(captureFps);
 gsap.ticker.add((time) => {
   const lenis = state.lenis;
   if (lenis) lenis.raf(time * 1000);
+  frameHooks.forEach((fn) => fn(time));
   const target = lenis ? Math.max(-1, Math.min(1, lenis.velocity / 28)) : 0;
   state.velocity += (target - state.velocity) * 0.12;
   state.engine?.render(time);

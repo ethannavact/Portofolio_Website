@@ -4,8 +4,10 @@
 import { Picture } from 'astro:assets';
 import type { Lang } from '../i18n/routes';
 import { pick, ui } from '../i18n/ui';
+import { getEntry } from 'astro:content';
 import type { SiteData } from '../lib/projects';
 import { IS_PREVIEW } from '../lib/env';
+import { remoteSrcset } from '../lib/images';
 
 interface Props {
   lang: Lang;
@@ -21,13 +23,33 @@ const thumb = youtubeId && !IS_PREVIEW ? `https://i.ytimg.com/vi/${encodeURIComp
 // El botón es un enlace real a YouTube: funciona sin JavaScript y donde no se puede incrustar
 // (el preview publicado). En el sitio, reel.ts lo convierte en el diálogo con el reel completo.
 const watchUrl = youtubeId ? `https://www.youtube.com/watch?v=${encodeURIComponent(youtubeId)}` : '';
+// Póster desde la portada de un proyecto del estudio (Keystatic → «Póster: portada de un proyecto»).
+// Con crossorigin, como en la ruleta: la misma URL queda en caché con CORS y WebGL la puede usar.
+const posterEntry = reel.posterProject ? await getEntry('projects', reel.posterProject) : undefined;
+const cover = posterEntry?.data.cover;
+const coverAlt = posterEntry ? pick(posterEntry.data.coverAlt, lang) : '';
 ---
 
 <section class="reel-hero" aria-label={title} data-reel data-yt={youtubeId} data-title={title} data-preview={IS_PREVIEW ? 'true' : undefined}>
   <div class="reel-frame" data-reel-frame>
     <div class="reel-media">
       {
-        reel.poster ? (
+        cover ? (
+          <img
+            class="reel-poster"
+            src={cover.src}
+            srcset={remoteSrcset(cover)}
+            sizes="100vw"
+            width={cover.width}
+            height={cover.height}
+            alt={coverAlt}
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+            crossorigin="anonymous"
+            style={cover.color ? `background-color: ${cover.color}` : undefined}
+          />
+        ) : reel.poster ? (
           <Picture
             src={reel.poster}
             alt={pick(reel.posterAlt, lang)}

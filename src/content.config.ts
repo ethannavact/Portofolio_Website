@@ -192,8 +192,10 @@ const site = defineCollection({
         title: t,
         poster: image().optional(),
         posterAlt: t,
+        /** Si se elige, el póster es la portada de ese proyecto (y su texto alternativo). */
+        posterProject: z.string().default(''),
       })
-      .default({ provider: 'none', id: '', url: '', title: { es: '', en: '' }, posterAlt: { es: '', en: '' } }),
+      .default({ provider: 'none', id: '', url: '', title: { es: '', en: '' }, posterAlt: { es: '', en: '' }, posterProject: '' }),
     modes: z.array(z.object({ title: t, body: t })).default([]),
     ctaTitle: t,
     seoDescription: t,

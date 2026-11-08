@@ -24,6 +24,13 @@ export const state: {
   engine: EngineApi | null;
 } = { lenis: null, velocity: 0, engine: null };
 
+/**
+ * Funciones que corren en cada cuadro, justo después de que Lenis mueve el scroll y antes
+ * de dibujar el WebGL. Así lo que depende del scroll (la ruleta) se mueve en el mismo cuadro
+ * que las imágenes, sin el cuadro de retraso del evento `scroll`.
+ */
+export const frameHooks = new Set<(time: number) => void>();
+
 export const onIdle = (fn: () => void, timeout = 1500) => {
   const ric = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number })
     .requestIdleCallback;

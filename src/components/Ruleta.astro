@@ -99,9 +99,18 @@ const facts = [
           </div>
 
           {(filters.length > 0 || more) && (
-            <footer class="r-foot">
+            <footer class="r-foot" data-ruleta-foot>
               {filters.length > 0 && (
-                <div class="r-filters" role="group" aria-label={t.filterLabel} data-lenis-prevent>
+                <button type="button" class="r-ftoggle label" aria-expanded="false" aria-controls={`${id}-filters`} data-filter-toggle>
+                  <span aria-hidden="true">{t.filterShort}</span>
+                  <span class="sr-only">
+                    {t.filterLabel}: <span data-filter-current>{t.filterAll}</span>
+                  </span>
+                  <span class="r-caret" aria-hidden="true" />
+                </button>
+              )}
+              {filters.length > 0 && (
+                <div class="r-filters" id={`${id}-filters`} role="group" aria-label={t.filterLabel} data-lenis-prevent>
                   <button type="button" class="chip" aria-pressed="true" data-filter="all">
                     {t.filterAll}
                   </button>
@@ -134,7 +143,13 @@ const facts = [
                   <li>{r.info.cat}</li>
                 ))}
               </ul>
-              <div class="r-ruler" data-ruleta-ruler />
+              <ul class="r-col r-col--line" role="list" data-drum-line>
+                {rows.map(() => (
+                  <li>
+                    <span />
+                  </li>
+                ))}
+              </ul>
               <ul class="r-col r-col--name" role="list" data-drum-name>
                 {rows.map((r) => (
                   <li>{r.info.short}</li>
@@ -164,7 +179,7 @@ const facts = [
           </div>
         </div>
 
-        <ol class="r-list" role="list" data-ruleta-list>
+        <ol class="r-list" role="list" data-ruleta-list data-gl-nohover>
           {rows.map((r, i) => (
             <li class="r-item" data-disciplines={r.p.data.disciplines.join(' ')}>
               <a class="r-link" href={caseRoute(r.p.id, lang)}>
@@ -424,10 +439,10 @@ const facts = [
 
   .r-drum-inner {
     position: absolute;
-    top: var(--focus-y, 50%);
+    top: var(--drum-y, var(--focus-y, 50%));
     left: 50%;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 1.5rem minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) 2.75rem minmax(0, 1fr);
     align-items: stretch;
     column-gap: 0.75rem;
     width: calc(var(--box-w, 100%) - 1.5rem);
@@ -471,39 +486,32 @@ const facts = [
     will-change: transform, opacity;
   }
 
-  .r-col li:global(.is-active) {
-    font-weight: var(--weight-bold);
-  }
-
   .r-col--cat li {
     text-align: right;
   }
 
-  .r-ruler {
-    position: relative;
-    overflow: hidden;
-    -webkit-mask-image: linear-gradient(transparent, #000 28%, #000 72%, transparent);
-    mask-image: linear-gradient(transparent, #000 28%, #000 72%, transparent);
-  }
-
-  .r-ruler::before {
-    content: '';
-    position: absolute;
-    inset: -2rem 0.4rem;
-    background: repeating-linear-gradient(to bottom, rgb(255 255 255 / 0.75) 0 1px, transparent 1px 9px);
-    transform: translateY(var(--tick-shift, 0px));
-  }
-
-  .r-ruler::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
+  /* Una línea por proyecto: la del foco es la más larga y las demás se acortan y se
+     apagan según su distancia (ruleta.ts escala cada una en cada cuadro). */
+  .r-col--line li {
     height: 2px;
     margin-top: -1px;
+    overflow: visible;
+  }
+
+  .r-col--line span {
+    display: block;
+    height: 100%;
+    border-radius: 1px;
     background: #fff;
-    box-shadow: 0 0 8px rgb(0 0 0 / 0.35);
+    box-shadow: 0 0 6px rgb(0 0 0 / 0.3);
+    transform: scaleX(0.16);
+    transform-origin: 50% 50%;
+    will-change: transform;
+  }
+
+  /* Botón de filtros: solo en teléfono (en escritorio los filtros están siempre a la vista). */
+  .r-ftoggle {
+    display: none;
   }
 
   .r-facts {
@@ -545,13 +553,15 @@ const facts = [
     white-space: nowrap;
   }
 
-  /* ── Teléfono y tablet: panel abajo, fijo sobre la tira ───────── */
+  /* ── Teléfono y tablet ──────────────────────────────────────────
+     Con JavaScript, la info flota sobre la parte baja de la portada en foco: sin caja,
+     texto blanco sobre un degradado suave de la propia imagen. Los filtros se despliegan
+     desde un botón. Sin JavaScript queda la tarjeta clara arriba de la lista. */
   @media (max-width: 63.99rem) {
     .ruleta {
       --r-aspect: 1 / 1 !important;
     }
 
-    /* Tira y panel comparten la celda: el panel se queda fijo abajo mientras pasa la tira. */
     .ruleta:global(.is-live) .r-right {
       grid-row: 1;
       grid-column: 1;
@@ -559,75 +569,21 @@ const facts = [
 
     .r-drum-inner {
       column-gap: 0.5rem;
+      grid-template-columns: minmax(0, 1fr) 2.25rem minmax(0, 1fr);
     }
 
     .r-col li {
       font-size: 0.8125rem;
     }
 
-    .r-left {
-      grid-row: 1;
-      grid-column: 1;
-      align-self: end;
-      position: sticky;
-      bottom: max(var(--gap), env(safe-area-inset-bottom, 0px));
-      z-index: 3;
-    }
-
-    .ruleta:not(:global(.is-live)) .r-left {
-      position: static;
-      grid-row: auto;
-    }
-
-    .r-panel {
-      gap: var(--space-3);
-      padding: var(--space-4);
-      box-shadow: 0 10px 30px rgb(26 9 2 / 0.12);
-    }
-
-    /* El título de la sección sigue ahí para lectores de pantalla. */
-    .ruleta:global(.is-live) .r-head {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-      clip: rect(0 0 0 0);
-      white-space: nowrap;
-    }
-
     .r-index {
       display: none;
     }
 
-
-    .r-info {
-      gap: var(--space-1);
-    }
-
-    .r-title {
-      font-size: var(--step-3);
-    }
-
-    .r-tagline,
-    .r-desc {
-      display: -webkit-box;
-      -webkit-box-orient: vertical;
-      -webkit-line-clamp: 2;
-      overflow: hidden;
-      font-size: var(--step-0);
-    }
-
-    .r-desc {
-      display: none;
-    }
-
-    .r-mfacts {
-      display: block;
-      margin-top: var(--space-1);
-    }
-
-    .r-cta {
-      margin-top: 0;
+    /* Sin JavaScript */
+    .r-panel {
+      gap: var(--space-3);
+      padding: var(--space-4);
     }
 
     .r-foot {
@@ -651,12 +607,208 @@ const facts = [
       flex: none;
     }
 
-    .r-more {
-      min-height: 40px;
+    .r-desc {
+      display: none;
     }
 
-    .ruleta:global(.is-live) .r-foot:has(.r-more):not(:has(.r-filters)) {
-      order: 1;
+    /* Con JavaScript: capa del mismo tamaño que el escenario, fija junto con él. */
+    .ruleta:global(.is-live) .r-left {
+      grid-row: 1;
+      grid-column: 1;
+      align-self: start;
+      position: sticky;
+      top: var(--stick-top);
+      z-index: 3;
+      height: var(--stage-h);
+      pointer-events: none;
+    }
+
+    .ruleta:global(.is-live) .r-panel {
+      position: absolute;
+      left: var(--panel-x, 0px);
+      right: var(--panel-x, 0px);
+      bottom: var(--panel-bottom, 0px);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      gap: var(--space-3);
+      padding: var(--space-7) var(--space-4) var(--space-4);
+      border-radius: 0 0 var(--radius) var(--radius);
+      background: linear-gradient(to top, rgb(14 8 4 / 0.62), rgb(14 8 4 / 0.34) 50%, rgb(14 8 4 / 0));
+      color: #fff;
+      text-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+      pointer-events: none;
+    }
+
+    .ruleta:global(.is-live) .r-panel a,
+    .ruleta:global(.is-live) .r-panel button {
+      pointer-events: auto;
+    }
+
+    /* El título de la sección sigue ahí para lectores de pantalla. */
+    .ruleta:global(.is-live) .r-head {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
+    .ruleta:global(.is-live) .r-info {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 2px var(--space-3);
+      min-width: 0;
+    }
+
+    .ruleta:global(.is-live) .r-title,
+    .ruleta:global(.is-live) .r-tagline {
+      flex-basis: 100%;
+      min-width: 0;
+    }
+
+    .ruleta:global(.is-live) .r-title {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      overflow: hidden;
+      font-size: var(--step-2);
+      line-height: 1.05;
+    }
+
+    .ruleta:global(.is-live) .r-tagline {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 1;
+      overflow: hidden;
+      max-width: none;
+      font-size: var(--step--1);
+      font-family: var(--font-body);
+      color: rgb(255 255 255 / 0.88);
+    }
+
+    .ruleta:global(.is-live) .r-tagline[hidden] {
+      display: none;
+    }
+
+    .ruleta:global(.is-live) .r-mfacts {
+      display: block;
+      margin-top: var(--space-1);
+      color: rgb(255 255 255 / 0.82);
+    }
+
+    .ruleta:global(.is-live) .r-cta {
+      display: inline-flex;
+      align-items: center;
+      column-gap: 0.6ch;
+      min-height: 28px;
+      margin-top: 0;
+      padding-block: 0;
+      color: #fff;
+    }
+
+    .ruleta:global(.is-live) .r-foot {
+      order: 0;
+      position: relative;
+      justify-items: end;
+    }
+
+    .ruleta:global(.is-live) .r-ftoggle {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      min-height: 40px;
+      padding: 0 var(--space-3);
+      border: 1px solid rgb(255 255 255 / 0.55);
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: #fff;
+      white-space: nowrap;
+    }
+
+    /* Con un filtro activo, el botón se llena (el nombre del filtro está en el menú). */
+    .ruleta:global(.is-live) .r-ftoggle:global(.is-filtered) {
+      background: #fff;
+      border-color: #fff;
+      color: #1a0902;
+      text-shadow: none;
+    }
+
+    .r-caret {
+      width: 6px;
+      height: 6px;
+      margin-top: -3px;
+      border-right: 1.5px solid currentColor;
+      border-bottom: 1.5px solid currentColor;
+      transform: rotate(45deg);
+      transition: transform var(--dur-1) var(--ease-out);
+    }
+
+    .ruleta:global(.is-live) .r-foot:global(.is-open) .r-caret {
+      margin-top: 3px;
+      transform: rotate(-135deg);
+    }
+
+    /* Menú de filtros: se abre hacia arriba, sobre la portada. */
+    .ruleta:global(.is-live) .r-filters {
+      position: absolute;
+      right: 0;
+      bottom: calc(100% + var(--space-2));
+      z-index: 4;
+      display: none;
+      flex-direction: column;
+      gap: var(--space-1);
+      width: max-content;
+      max-width: calc(100vw - 4 * var(--gap));
+      max-height: min(60svh, 24rem);
+      margin: 0;
+      padding: var(--space-2);
+      overflow-y: auto;
+      border-radius: var(--radius);
+      background: rgb(14 8 4 / 0.7);
+      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(14px);
+      text-shadow: none;
+    }
+
+    .ruleta:global(.is-live) .r-foot:global(.is-open) .r-filters {
+      display: flex;
+    }
+
+    .ruleta:global(.is-live) .r-filters .chip {
+      justify-content: flex-start;
+      width: 100%;
+      min-height: 40px;
+      border-color: transparent;
+      color: #fff;
+      text-align: left;
+    }
+
+    .ruleta:global(.is-live) .r-filters .chip:hover {
+      border-color: rgb(255 255 255 / 0.5);
+    }
+
+    .ruleta:global(.is-live) .r-filters .chip[aria-pressed='true'] {
+      background: #fff;
+      border-color: #fff;
+      color: #1a0902;
+    }
+
+    .ruleta:global(.is-live) .r-more {
+      min-height: 40px;
+      padding: 0 var(--space-3);
+      border-color: rgb(255 255 255 / 0.55);
+      color: #fff;
+      font-size: var(--step--1);
+      white-space: nowrap;
+    }
+
+    .ruleta:global(.is-live) .r-more:hover {
+      background: #fff;
+      color: #1a0902;
+      text-shadow: none;
     }
   }
 

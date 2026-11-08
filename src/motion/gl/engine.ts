@@ -115,22 +115,33 @@ class Plane {
     this.mesh.frustumCulled = false;
     engine.scene.add(this.mesh);
 
-    this.hoverEl.addEventListener('pointerenter', this.onEnter);
-    this.hoverEl.addEventListener('pointerleave', this.onLeave);
-    this.hoverEl.addEventListener('pointermove', this.onMove);
+    // Sin hover donde las imágenes pasan solas bajo el cursor (la ruleta): ahí el efecto se
+    // disparaba al hacer scroll y movía la imagen unos píxeles de golpe.
+    if (!el.closest('[data-gl-nohover]')) {
+      this.hoverEl.addEventListener('pointerenter', this.onEnter);
+      this.hoverEl.addEventListener('pointerleave', this.onLeave);
+      this.hoverEl.addEventListener('pointermove', this.onMove);
+    }
     this.load();
   }
 
   private onEnter = (e: PointerEvent) => {
     if (e.pointerType !== 'mouse') return;
+    // El punto de la lente arranca donde está el cursor (no donde quedó la última vez).
+    gsap.killTweensOf(this.u.uMouse.value);
+    this.u.uMouse.value.copy(this.pointerUv(e));
     gsap.to(this.u.uHover, { value: 1, duration: 0.9, ease: 'expo.out', overwrite: true });
   };
   private onLeave = () => gsap.to(this.u.uHover, { value: 0, duration: 0.9, ease: 'expo.out', overwrite: true });
-  private onMove = (e: PointerEvent) => {
+  private pointerUv(e: PointerEvent) {
     const r = this.el.getBoundingClientRect();
+    return new Vector2(clamp((e.clientX - r.left) / r.width, 0, 1), clamp(1 - (e.clientY - r.top) / r.height, 0, 1));
+  }
+  private onMove = (e: PointerEvent) => {
+    const { x, y } = this.pointerUv(e);
     gsap.to(this.u.uMouse.value, {
-      x: clamp((e.clientX - r.left) / r.width, 0, 1),
-      y: clamp(1 - (e.clientY - r.top) / r.height, 0, 1),
+      x,
+      y,
       duration: 0.6,
       ease: 'power3.out',
       overwrite: true,
@@ -225,6 +236,10 @@ class Engine implements EngineApi {
   planeGeo = new PlaneGeometry(1, 1, 24, 24);
   blank: DataTexture;
   viewH: U<number> = { value: innerHeight };
+  /** Tamaño real del canvas en px CSS. No es innerWidth: en Windows la barra de scroll le
+   *  quita ~15 px y, con innerWidth, todo el WebGL se dibujaba comprimido y corrido a la
+   *  izquierda; las imágenes brincaban unos px de derecha a izquierda al pasar del <img> al WebGL. */
+  viewW = innerWidth;
   dprU: U<number> = { value: 1 };
   planes: Plane[] = [];
   planesWanted: boolean;
@@ -310,8 +325,10 @@ class Engine implements EngineApi {
     if (opts.planes) this.collectPlanes();
 
     window.addEventListener('resize', () => this.resize());
+    // La barra de scroll puede aparecer o irse sin que cambie la ventana.
+    new ResizeObserver(() => this.resize()).observe(canvas);
     window.addEventListener('pointermove', (e) => {
-      this.mouseTarget.set(e.clientX / innerWidth, 1 - e.clientY / innerHeight);
+      this.mouseTarget.set(e.clientX / this.viewW, 1 - e.clientY / this.viewH.value);
       this.mouseAmtTarget = 1;
       if (this.pv) this.pv.pos.set(e.clientX, e.clientY);
     }, { passive: true });
@@ -376,8 +393,10 @@ class Engine implements EngineApi {
   }
 
   resize() {
-    const w = innerWidth;
-    const h = innerHeight;
+    const el = this.renderer.domElement;
+    const w = el.clientWidth || innerWidth;
+    const h = el.clientHeight || innerHeight;
+    this.viewW = w;
     const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
     this.renderer.setPixelRatio(dpr);
     this.renderer.setSize(w, h, false);
@@ -503,7 +522,7 @@ class Engine implements EngineApi {
 
   private renderFrame(time: number) {
     this.dirty = false;
-    const vh = innerHeight;
+    const vh = this.viewH.value;
     const v = this.motion ? state.velocity : 0;
     this.mouse.lerp(this.mouseTarget, this.motion ? 0.06 : 1);
     this.mouseAmt += (this.mouseAmtTarget - this.mouseAmt) * (this.motion ? 0.04 : 1);

@@ -7,6 +7,9 @@ html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   scroll-padding-top: calc(var(--header-h) + var(--space-4));
+  /* En Windows la barra de scroll ocupa ~15 px: con el hueco reservado, el contenido no se
+     recorre de lado si la barra aparece o se oculta (p. ej. al abrir el reel). */
+  scrollbar-gutter: stable;
   background: var(--bg);
 }
 
@@ -211,7 +214,7 @@ body > .draft-mode { position: fixed; z-index: 60; }
 html.lenis, html.lenis body { height: auto; }
 .lenis.lenis-smooth { scroll-behavior: auto !important; }
 .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
-.lenis.lenis-stopped { overflow: clip; }
+.lenis.lenis-stopped { overflow: hidden; }
 .lenis.lenis-smooth iframe { pointer-events: none; }
 .lenis.lenis-smooth dialog iframe { pointer-events: auto; }
 

@@ -117,6 +117,13 @@ export default config({
               publicPath: '../../assets/site/',
             }),
             posterAlt: t('Texto alternativo del póster'),
+            posterProject: fields.select({
+              label: 'Póster: portada de un proyecto',
+              description:
+                'Si eliges un proyecto, el póster es su portada (la misma imagen y el mismo texto alternativo del estudio) y la imagen de arriba queda de respaldo.',
+              options: [{ label: '— Usar la imagen de arriba —', value: '' }, ...projectOptions],
+              defaultValue: '',
+            }),
           },
           { label: 'Reel (primera sección de la Home)' },
         ),
