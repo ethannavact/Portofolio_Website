@@ -117,7 +117,29 @@ export function toEntries(data: M, mediaBase?: string) {
         default:
           return null;
       }
-    }).filter(Boolean);
+    }).filter(Boolean) as M[];
+
+    // Media del banco que no está en ningún bloque (ni es portada o video principal): se agrega
+    // al final del caso, en el orden de la pestaña Media del estudio, para que nada subido se pierda.
+    const used = new Set<string>([p.cover, p.heroVideo].filter(Boolean));
+    const walk = (o: unknown): void => {
+      if (typeof o === 'string') used.add(o);
+      else if (Array.isArray(o)) o.forEach(walk);
+      else if (o && typeof o === 'object') Object.values(o).forEach(walk);
+    };
+    walk(p.blocks);
+    const rest = (p.media as M[]).filter((m) => !m.pending && !used.has(m.id));
+    const restImages = rest.filter((m) => m.type === 'image' && m.variants?.length).map((m) => pic(m.id));
+    for (const m of rest.filter((m) => m.type === 'video')) {
+      const v = video(m.id);
+      if (v.provider !== 'none') blocks.push({ discriminant: 'video', value: { video: v, caption: m.caption ?? E, size: 'wide', note: '' } });
+    }
+    if (restImages.length) {
+      blocks.push({
+        discriminant: 'gallery',
+        value: { heading: { es: 'Más del proyecto', en: 'More from the project' }, layout: 'grid-2', aspect: '4/3', items: restImages },
+      });
+    }
 
     const cover = pic(p.cover);
     return {
