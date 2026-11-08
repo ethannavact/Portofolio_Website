@@ -143,13 +143,7 @@ const facts = [
                   <li>{r.info.cat}</li>
                 ))}
               </ul>
-              <ul class="r-col r-col--line" role="list" data-drum-line>
-                {rows.map(() => (
-                  <li>
-                    <span />
-                  </li>
-                ))}
-              </ul>
+              <ul class="r-col r-col--line" role="list" data-drum-line />
               <ul class="r-col r-col--name" role="list" data-drum-name>
                 {rows.map((r) => (
                   <li>{r.info.short}</li>
@@ -442,7 +436,7 @@ const facts = [
     top: var(--drum-y, var(--focus-y, 50%));
     left: 50%;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 2.75rem minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) 3.5rem minmax(0, 1fr);
     align-items: stretch;
     column-gap: 0.75rem;
     width: calc(var(--box-w, 100%) - 1.5rem);
@@ -490,21 +484,33 @@ const facts = [
     text-align: right;
   }
 
-  /* Una línea por proyecto: la del foco es la más larga y las demás se acortan y se
-     apagan según su distancia (ruleta.ts escala cada una en cada cuadro). */
-  .r-col--line li {
-    height: 2px;
-    margin-top: -1px;
-    overflow: visible;
+  /* Regla de líneas (las crea ruleta.ts): una por proyecto y varias intermedias. Todas
+     cambian de largo en cada cuadro según su distancia al foco; las de proyecto son más
+     gruesas y largas. Van con :global porque se crean en el navegador. */
+  .r-col--line :global(li) {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    margin-top: -0.5px;
+    opacity: 0;
+    backface-visibility: hidden;
+    will-change: transform, opacity;
   }
 
-  .r-col--line span {
+  .r-col--line :global(li.is-major) {
+    height: 2px;
+    margin-top: -1px;
+  }
+
+  .r-col--line :global(span) {
     display: block;
     height: 100%;
     border-radius: 1px;
     background: #fff;
     box-shadow: 0 0 6px rgb(0 0 0 / 0.3);
-    transform: scaleX(0.16);
+    transform: scaleX(0);
     transform-origin: 50% 50%;
     will-change: transform;
   }
@@ -569,7 +575,7 @@ const facts = [
 
     .r-drum-inner {
       column-gap: 0.5rem;
-      grid-template-columns: minmax(0, 1fr) 2.25rem minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr) 2.75rem minmax(0, 1fr);
     }
 
     .r-col li {
@@ -611,33 +617,65 @@ const facts = [
       display: none;
     }
 
-    /* Con JavaScript: capa del mismo tamaño que el escenario, fija junto con él. */
+    /* Con JavaScript: la info queda pegada abajo de la ventana (sticky bottom). El borde lo
+       decide cada navegador: en Safari de iOS 26 queda arriba de su barra flotante; donde la
+       barra va aparte (Chrome en iOS, Android) llega hasta abajo. Sin caja: texto blanco con
+       un halo de sombra. Sobre el fondo arena (antes de la primera portada o después de la
+       última) cambia a tinta (ruleta.ts → .is-on-bg). */
     .ruleta:global(.is-live) .r-left {
       grid-row: 1;
       grid-column: 1;
-      align-self: start;
+      align-self: end;
       position: sticky;
-      top: var(--stick-top);
+      bottom: 0;
       z-index: 3;
-      height: var(--stage-h);
       pointer-events: none;
     }
 
     .ruleta:global(.is-live) .r-panel {
-      position: absolute;
-      left: var(--panel-x, 0px);
-      right: var(--panel-x, 0px);
-      bottom: var(--panel-bottom, 0px);
+      --r-halo: 0 1px 2px rgb(0 0 0 / 0.55), 0 0 14px rgb(0 0 0 / 0.45), 0 0 32px rgb(0 0 0 / 0.3);
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       align-items: end;
       gap: var(--space-3);
-      padding: var(--space-7) var(--space-4) var(--space-4);
-      border-radius: 0 0 var(--radius) var(--radius);
-      background: linear-gradient(to top, rgb(14 8 4 / 0.62), rgb(14 8 4 / 0.34) 50%, rgb(14 8 4 / 0));
+      margin-inline: var(--panel-x, 0px);
+      padding: var(--space-3) var(--space-4) max(var(--space-4), calc(env(safe-area-inset-bottom, 0px) + var(--space-2)));
+      border-radius: 0;
+      background: none;
       color: #fff;
-      text-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+      text-shadow: var(--r-halo);
       pointer-events: none;
+      transition: color 0.3s var(--ease-out), text-shadow 0.3s var(--ease-out);
+    }
+
+    .ruleta:global(.is-live) .r-panel :is(.r-tagline, .r-mfacts, .r-cta, .r-ftoggle, .r-more) {
+      transition: color 0.3s var(--ease-out), border-color 0.3s var(--ease-out), background-color 0.3s var(--ease-out);
+    }
+
+    /* Sobre el fondo arena: tinta, sin halo. */
+    .ruleta:global(.is-live.is-on-bg) .r-panel {
+      --r-halo: none;
+      color: var(--fg);
+    }
+
+    .ruleta:global(.is-live.is-on-bg) .r-tagline,
+    .ruleta:global(.is-live.is-on-bg) .r-cta {
+      color: var(--fg);
+    }
+
+    .ruleta:global(.is-live.is-on-bg) .r-mfacts {
+      color: var(--muted);
+    }
+
+    .ruleta:global(.is-live.is-on-bg) .r-ftoggle,
+    .ruleta:global(.is-live.is-on-bg) .r-more {
+      border-color: var(--fg);
+      color: var(--fg);
+    }
+
+    .ruleta:global(.is-live.is-on-bg) .r-ftoggle:global(.is-filtered) {
+      background: var(--fg);
+      color: var(--surface);
     }
 
     .ruleta:global(.is-live) .r-panel a,

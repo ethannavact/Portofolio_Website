@@ -6,6 +6,8 @@
 // tambor y las líneas avanzan exactamente con las portadas, sin el cuadro de retraso que
 // tenía el evento `scroll`. Cada valor es continuo (nada cambia de golpe al pasar de un
 // proyecto a otro): la opacidad y el largo de las líneas dependen de la distancia al foco.
+// Entre cada proyecto hay líneas intermedias (no son proyectos): con el scroll, toda la
+// regla se estira y se encoge alrededor del foco.
 import { clamp, frameHooks, isMotion, state } from './core';
 
 type Info = Record<'short' | 'tagline' | 'summary' | 'client' | 'year' | 'role' | 'status' | 'cat', string>;
@@ -15,8 +17,15 @@ const STEP = 24;
 const RADIUS = 78;
 const RAD = Math.PI / 180;
 
-/** Largo de la línea de cada proyecto: 1 en el foco y más corta con la distancia. */
-const lineScale = (d: number) => 0.16 + 0.84 / (1 + 1.5 * d * d);
+/** Líneas por proyecto en la regla: 1 de proyecto + (SUB − 1) intermedias. */
+const SUB = 5;
+/** Líneas que existen a la vez (las visibles en el tambor, ±3.5 proyectos, y margen). */
+const POOL = 7 * SUB + 4;
+/** Largo de una línea según su distancia al foco (1 = la más larga). */
+const lineScale = (d: number) => 0.1 + 0.9 / (1 + 3 * d * d);
+/** Las intermedias son más cortas y tenues que las de proyecto. */
+const MINOR_LEN = 0.62;
+const MINOR_ALPHA = 0.7;
 /** Opacidad por distancia al foco (se multiplica por el giro del tambor). */
 const fade = (d: number) => 0.4 + 0.6 * Math.exp(-2.2 * d * d);
 
@@ -42,13 +51,25 @@ function setup(section: HTMLElement) {
   const hrefs = items.map((li) => li.querySelector('a')?.getAttribute('href') ?? '#');
   const cats = Array.from(section.querySelectorAll<HTMLElement>('[data-drum-cat] > li'));
   const names = Array.from(section.querySelectorAll<HTMLElement>('[data-drum-name] > li'));
-  const lines = Array.from(section.querySelectorAll<HTMLElement>('[data-drum-line] > li'));
-  const bars = lines.map((li) => li.firstElementChild as HTMLElement | null);
+  // Regla de líneas: un grupo fijo de elementos que se reparte entre las posiciones visibles.
+  const lineCol = section.querySelector<HTMLElement>('[data-drum-line]');
+  const pool: { li: HTMLElement; bar: HTMLElement; q: number; on: boolean }[] = [];
+  if (lineCol) {
+    lineCol.textContent = '';
+    for (let j = 0; j < POOL; j++) {
+      const li = document.createElement('li');
+      const bar = document.createElement('span');
+      li.append(bar);
+      lineCol.append(li);
+      pool.push({ li, bar, q: Number.NaN, on: false });
+    }
+  }
   const ticks = Array.from(section.querySelectorAll<HTMLElement>('[data-ruleta-ticks] > li'));
   const swappers = [section.querySelector<HTMLElement>('[data-ruleta-info]'), section.querySelector<HTMLElement>('[data-ruleta-facts]')].filter(
     (el): el is HTMLElement => Boolean(el),
   );
   const fields = Array.from(section.querySelectorAll<HTMLElement>('[data-f]'));
+  const panel = section.querySelector<HTMLElement>('.r-panel');
   const indexEl = section.querySelector<HTMLElement>('[data-ruleta-index]');
   const posEl = section.querySelector<HTMLElement>('[data-ruleta-pos]');
   const totalEl = section.querySelector<HTMLElement>('[data-ruleta-total]');
@@ -72,33 +93,39 @@ function setup(section: HTMLElement) {
   let lastY = Number.NaN;
   let swapTimer = 0;
   let snapTimer = 0;
+  let wide = true;
+  let padTop = 0;
+  let boxH = 0;
+  let onBg = false;
   /** Filas que ya quedaron ocultas (fuera del tambor): no se vuelven a escribir. */
   const parked = new Set<number>();
 
   // ── Medidas: caja de portada, alto de cada parada y línea de foco ──
   function layout() {
-    const wide = desktop();
+    wide = desktop();
     const stageH = stage!.clientHeight;
     const colW = list!.clientWidth;
     if (!stageH || !colW) return;
     const gap = parseFloat(getComputedStyle(section).rowGap) || 8;
     const aspect = wide ? 4 / 3 : 1;
-    // En teléfono la info va encima de la portada en foco (abajo, sobre un degradado).
-    const boxH = Math.min(colW / aspect, stageH * (wide ? 0.74 : 0.7));
+    // En teléfono la info va pegada abajo de la ventana: la portada en foco queda arriba de
+    // ella (se mide una vez aquí; si cambia el texto, la tira no se mueve).
+    const cover = wide ? 0 : (panel?.offsetHeight ?? 0) + gap;
+    const avail = Math.max(stageH - cover, stageH * 0.5);
+    boxH = Math.min(colW / aspect, avail * (wide ? 0.74 : 0.92));
     const boxW = boxH * aspect;
     slot = boxH + gap;
-    // Escritorio: foco al centro. Teléfono: un poco arriba (menos hueco antes de la primera
-    // portada y más de la siguiente a la vista).
-    focusY = wide ? stageH / 2 : (stageH - boxH) * 0.32 + boxH / 2;
+    // Escritorio: foco al centro. Teléfono: un poco arriba dentro del espacio libre (menos
+    // hueco antes de la primera portada).
+    focusY = wide ? stageH / 2 : (avail - boxH) * 0.32 + boxH / 2;
+    padTop = focusY - slot / 2;
     section.style.setProperty('--box-w', `${boxW.toFixed(1)}px`);
     section.style.setProperty('--box-h', `${boxH.toFixed(1)}px`);
     section.style.setProperty('--slot-h', `${slot.toFixed(1)}px`);
     section.style.setProperty('--focus-y', `${focusY.toFixed(1)}px`);
-    // En teléfono el tambor sube un poco para dejarle la parte baja de la portada a la info.
-    section.style.setProperty('--drum-y', `${(wide ? focusY : focusY - boxH * 0.1).toFixed(1)}px`);
-    section.style.setProperty('--panel-bottom', `${(stageH - focusY - boxH / 2).toFixed(1)}px`);
+    section.style.setProperty('--drum-y', `${focusY.toFixed(1)}px`);
     section.style.setProperty('--panel-x', `${((colW - boxW) / 2).toFixed(1)}px`);
-    section.style.setProperty('--pad-top', `${(focusY - slot / 2).toFixed(1)}px`);
+    section.style.setProperty('--pad-top', `${padTop.toFixed(1)}px`);
     section.style.setProperty('--pad-bottom', `${(stageH - focusY - slot / 2).toFixed(1)}px`);
     dirty = true;
     update();
@@ -111,9 +138,27 @@ function setup(section: HTMLElement) {
     if (!dirty && y === lastY) return;
     dirty = false;
     lastY = y;
-    raw = (stage!.getBoundingClientRect().top - list!.getBoundingClientRect().top) / slot;
+    const listTop = list!.getBoundingClientRect().top;
+    raw = (stage!.getBoundingClientRect().top - listTop) / slot;
     const p = clamp(raw, 0, Math.max(0, visible.length - 1));
     spin(p);
+    if (!wide && panel) {
+      // ¿Hay portada detrás de la info? Si no (arena antes de la primera o después de la
+      // última), el texto pasa a tinta.
+      const r = panel.getBoundingClientRect();
+      const mid = (r.top + r.bottom) / 2;
+      const inset = (slot - boxH) / 2;
+      const first = listTop + padTop + inset;
+      const last = listTop + padTop + visible.length * slot - inset;
+      const bg = mid < first || mid > last;
+      if (bg !== onBg) {
+        onBg = bg;
+        section.classList.toggle('is-on-bg', bg);
+      }
+    } else if (onBg) {
+      onBg = false;
+      section.classList.remove('is-on-bg');
+    }
     const a = Math.round(p);
     if (a !== active) setActive(a);
   }
@@ -122,7 +167,7 @@ function setup(section: HTMLElement) {
     visible.forEach((i, k) => {
       const d = k - p;
       const th = d * STEP;
-      const row = [cats[i], names[i], lines[i]];
+      const row = [cats[i], names[i]];
       if (Math.abs(th) > 84) {
         if (!parked.has(i)) {
           parked.add(i);
@@ -131,16 +176,48 @@ function setup(section: HTMLElement) {
         return;
       }
       parked.delete(i);
-      const y = Math.sin(th * RAD) * RADIUS;
       const o = (Math.cos(th * RAD) ** 2 * fade(d)).toFixed(3);
-      const transform = `translate3d(0, ${y.toFixed(2)}px, 0) rotateX(${(-th).toFixed(2)}deg)`;
+      const transform = drumTransform(th);
       row.forEach((el) => {
         if (!el) return;
         el.style.transform = transform;
         el.style.opacity = o;
       });
-      const bar = bars[i];
-      if (bar) bar.style.transform = `scaleX(${lineScale(d).toFixed(3)})`;
+    });
+    rule(p);
+  }
+
+  const drumTransform = (th: number) =>
+    `translate3d(0, ${(Math.sin(th * RAD) * RADIUS).toFixed(2)}px, 0) rotateX(${(-th).toFixed(2)}deg)`;
+
+  // Regla: posiciones q / SUB (q múltiplo de SUB = proyecto) entre la primera y la última
+  // portada visible, solo las que caben en el tambor. Cada q usa siempre el mismo elemento.
+  function rule(p: number) {
+    if (!pool.length) return;
+    const n = visible.length;
+    const qMin = Math.max(0, Math.ceil((p - 3.5) * SUB));
+    const qMax = Math.min((n - 1) * SUB, Math.floor((p + 3.5) * SUB));
+    const used = new Set<number>();
+    for (let q = qMin; q <= qMax; q++) {
+      const e = pool[q % POOL];
+      used.add(q % POOL);
+      const d = q / SUB - p;
+      const th = d * STEP;
+      const major = q % SUB === 0;
+      if (e.q !== q) {
+        e.q = q;
+        e.li.classList.toggle('is-major', major);
+      }
+      e.on = true;
+      e.li.style.transform = drumTransform(th);
+      e.li.style.opacity = (Math.cos(th * RAD) ** 2 * fade(d) * (major ? 1 : MINOR_ALPHA)).toFixed(3);
+      e.bar.style.transform = `scaleX(${(lineScale(d) * (major ? 1 : MINOR_LEN)).toFixed(3)})`;
+    }
+    pool.forEach((e, j) => {
+      if (e.on && !used.has(j)) {
+        e.on = false;
+        e.li.style.opacity = '0';
+      }
     });
   }
 
@@ -224,7 +301,7 @@ function setup(section: HTMLElement) {
     items.forEach((li, i) => {
       const match = value === 'all' || (li.dataset.disciplines ?? '').split(' ').includes(value);
       li.hidden = !match;
-      [cats[i], names[i], lines[i], ticks[i]].forEach((el) => el && (el.hidden = !match));
+      [cats[i], names[i], ticks[i]].forEach((el) => el && (el.hidden = !match));
       if (match) visible.push(i);
     });
     parked.clear();
@@ -273,6 +350,7 @@ function setup(section: HTMLElement) {
   let lastW = 0;
   let lastH = 0;
   const relayout = () => {
+    dirty = true;
     const w = list.clientWidth;
     const h = stage.clientHeight;
     if (w === lastW && h === lastH) return;
