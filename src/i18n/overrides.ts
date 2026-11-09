@@ -3,8 +3,9 @@
 import { getEntry } from 'astro:content';
 
 type Strings = Record<string, string>;
+type Discipline = { value: string; es: string; en: string };
 
-let data: { es: Strings; en: Strings } = { es: {}, en: {} };
+let data: { es: Strings; en: Strings; disciplines: Discipline[] } = { es: {}, en: {}, disciplines: [] };
 try {
   const entry = await getEntry('ui', 'strings');
   if (entry) data = entry.data as typeof data;

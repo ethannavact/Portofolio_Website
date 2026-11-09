@@ -1,5 +1,6 @@
 import type { Lang } from './routes';
 import { uiOverrides } from './overrides';
+import { DISCIPLINES as BASE_DISCIPLINES } from '../lib/taxonomy';
 
 // Textos de interfaz. Estos son los de respaldo: el estudio (Sitio → Textos de la interfaz) puede
 // cambiar cualquiera que sea texto simple. Los que llevan número (p. ej. «3 proyectos») viven solo aquí.
@@ -264,6 +265,12 @@ const withStudio = (base: UIStrings, extra: Record<string, string> | undefined):
 
 const UI: Record<Lang, UIStrings> = { es: withStudio(es, uiOverrides.es), en: withStudio(en, uiOverrides.en) };
 export const ui = (lang: Lang): UIStrings => UI[lang];
+
+/** Disciplinas (filtros) con los nombres editados en el estudio. */
+export const DISCIPLINES = BASE_DISCIPLINES.map((d) => {
+  const edit = uiOverrides.disciplines?.find((x) => x.value === d.value);
+  return { value: d.value, es: edit?.es?.trim() || d.es, en: edit?.en?.trim() || d.en };
+});
 
 /** Elige el idioma de un campo bilingüe con respaldo al otro idioma. */
 export const pick = (value: { es?: string; en?: string } | undefined, lang: Lang): string => {

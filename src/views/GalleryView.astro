@@ -55,7 +55,7 @@ const viewable = items.filter((i) => i.full).length;
       items.length === 0 ? (
         <p class="empty">{t.galleryEmpty}</p>
       ) : (
-        <ul class="g-grid" role="list">
+        <ul class="g-grid" role="list" data-masonry>
           {items.map((it) => (
             <li class="g-item">
               <figure>
@@ -130,6 +130,32 @@ const viewable = items.filter((i) => i.full).length;
 </Base>
 
 <script>
+  // Rejilla en orden de lectura. Las columnas de CSS (sin JS) acomodan de arriba abajo, columna
+  // por columna; con JS cada still ocupa las filas que mide su alto y la rejilla los acomoda de
+  // izquierda a derecha, en el orden del estudio, sin huecos.
+  const grid = document.querySelector<HTMLElement>('[data-masonry]');
+  if (grid) {
+    const ROW = 4; // px; igual que grid-auto-rows en .is-masonry
+    let frame = 0;
+    const layout = () => {
+      frame = 0;
+      grid.classList.add('is-masonry');
+      for (const li of Array.from(grid.children) as HTMLElement[]) {
+        const figure = li.firstElementChild as HTMLElement | null;
+        if (!figure) continue;
+        const gap = parseFloat(getComputedStyle(li).marginBottom) || 0;
+        li.style.gridRowEnd = `span ${Math.max(1, Math.ceil((figure.getBoundingClientRect().height + gap) / ROW))}`;
+      }
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(layout);
+    };
+    layout();
+    new ResizeObserver(schedule).observe(grid);
+    grid.querySelectorAll('img').forEach((img) => img.complete || img.addEventListener('load', schedule, { once: true }));
+    document.fonts?.ready.then(schedule);
+  }
+
   // Visor: mejora progresiva. Sin JS, cada still abre la imagen grande en su propia página.
   const dialog = document.querySelector<HTMLDialogElement>('[data-viewer]');
   const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-gallery-item]'));
@@ -201,6 +227,16 @@ const viewable = items.filter((i) => i.full).length;
   .g-item {
     break-inside: avoid;
     margin-bottom: var(--space-6);
+  }
+
+  /* Con JS (ver el script): hasta 3 columnas de al menos 18rem, en orden de lectura. */
+  .g-grid:global(.is-masonry) {
+    columns: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(max(min(18rem, 100%), (100% - 2 * var(--gutter)) / 3), 1fr));
+    grid-auto-rows: 4px;
+    column-gap: var(--gutter);
+    align-items: start;
   }
 
   figure {

@@ -7,9 +7,8 @@
 // Sin JavaScript queda una lista de portadas enlazadas. La lógica vive en src/motion/ruleta.ts.
 import Media from './media/Media.astro';
 import { caseRoute, type Lang } from '../i18n/routes';
-import { pick, ui } from '../i18n/ui';
+import { DISCIPLINES, pick, ui } from '../i18n/ui';
 import type { Project } from '../lib/projects';
-import { DISCIPLINES } from '../lib/taxonomy';
 import { splitTitle } from '../lib/titles';
 
 interface Props {

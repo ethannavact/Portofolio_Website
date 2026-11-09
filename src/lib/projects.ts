@@ -20,7 +20,8 @@ export async function getFeatured(limit = 6): Promise<Project[]> {
   const featured = list
     .filter((p) => p.data.featured && p.data.published)
     .sort((a, b) => a.data.homeOrder - b.data.homeOrder || byOrder(a, b));
-  return (featured.length ? featured : list.filter((p) => p.data.published)).slice(0, limit);
+  // La selección del estudio sale completa; sin selección, los primeros publicados.
+  return featured.length ? featured : list.filter((p) => p.data.published).slice(0, limit);
 }
 
 /** Siguiente caso en el orden del índice (cíclico). */

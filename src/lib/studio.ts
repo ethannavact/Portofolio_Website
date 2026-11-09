@@ -75,7 +75,16 @@ export function toEntries(data: M, mediaBase?: string) {
     };
     const pic = (id?: string) => {
       const m = byId(id);
-      return { image: m?.type === 'image' ? img(m) : undefined, alt: (m?.alt ?? E) as T, caption: (m?.caption ?? E) as T, note: m?.pending ? m.note ?? '' : '', inGallery: Boolean(m?.gallery) };
+      return {
+        image: m?.type === 'image' ? img(m) : undefined,
+        alt: (m?.alt ?? E) as T,
+        caption: (m?.caption ?? E) as T,
+        note: m?.pending ? m.note ?? '' : '',
+        inGallery: Boolean(m?.gallery),
+        // Id y lugar en la pestaña Media: la Galería sigue ese orden y no repite imágenes.
+        mediaId: m?.id ?? '',
+        mediaIndex: m ? p.media.indexOf(m) : -1,
+      };
     };
     const video = (id?: string) => {
       const m = byId(id);
@@ -180,10 +189,12 @@ export function toEntries(data: M, mediaBase?: string) {
         coverAlt: cover.alt,
         coverNote: cover.note,
         coverInGallery: cover.inGallery,
+        coverMediaId: cover.mediaId,
+        coverMediaIndex: cover.mediaIndex,
         heroVideo: video(p.heroVideo),
         blocks,
         stack: p.stack,
-        credits: p.credits,
+        credits: (p.credits ?? []).map((c: M) => ({ role: c.role ?? E, name: c.name ?? '', url: c.url ?? '' })),
         sources: p.sources,
         seoDescription: p.seoDescription,
         related: p.related ?? [],
@@ -269,7 +280,13 @@ export function siteFromStudio(data: M, mediaBase?: string): Partial<Record<Sect
   }
   if (s.about && typeof s.about === 'object') out.about = s.about;
   if (Array.isArray(s.services)) out.services = s.services;
-  if (s.ui && typeof s.ui === 'object') out.ui = { es: s.ui.es ?? {}, en: s.ui.en ?? {} };
+  if (s.ui && typeof s.ui === 'object') {
+    // Nombres de los filtros (disciplinas) editados en el estudio.
+    const disciplines = (Array.isArray(data.taxonomy?.disciplines) ? data.taxonomy.disciplines : []).filter(
+      (d: M) => d && typeof d.value === 'string',
+    );
+    out.ui = { es: s.ui.es ?? {}, en: s.ui.en ?? {}, disciplines };
+  }
   return out;
 }
 

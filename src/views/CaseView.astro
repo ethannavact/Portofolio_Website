@@ -11,11 +11,10 @@ import VideoEmbed from '../components/media/VideoEmbed.astro';
 import ProjectCard from '../components/ProjectCard.astro';
 import ChapterText from '../components/ChapterText.astro';
 import { caseAlternates, caseRoute, contactRoute, route, serviceRoute, type Lang } from '../i18n/routes';
-import { pick, ui } from '../i18n/ui';
+import { DISCIPLINES, pick, ui } from '../i18n/ui';
 import { getProjects, nextProject, type Project } from '../lib/projects';
 import { breadcrumbLd, caseLd } from '../lib/seo';
 import { plain, richInline } from '../lib/rich';
-import { DISCIPLINES } from '../lib/taxonomy';
 import { SHOW_DRAFTS } from '../lib/env';
 import { servicesFor } from '../lib/services';
 import { buildChapters, type ChapterMedia } from '../lib/chapters';
@@ -269,7 +268,16 @@ if (d.cover) ogImageUrl = new URL((await toOg(d.cover)).src, base).href;
                   {credits.map((c) => (
                     <div>
                       <dt>{pick(c.role, lang)}</dt>
-                      <dd>{c.name}</dd>
+                      <dd>
+                        {c.url ? (
+                          <a href={c.url} target={c.url.startsWith('mailto:') ? undefined : '_blank'} rel="noopener">
+                            {c.name}
+                            {!c.url.startsWith('mailto:') && <span class="sr-only"> {t.opensNewTab}</span>}
+                          </a>
+                        ) : (
+                          c.name
+                        )}
+                      </dd>
                     </div>
                   ))}
                 </dl>

@@ -1,9 +1,8 @@
 ---
 import Media from './media/Media.astro';
 import { caseRoute, type Lang } from '../i18n/routes';
-import { pick, ui } from '../i18n/ui';
+import { DISCIPLINES, pick, ui } from '../i18n/ui';
 import type { Project } from '../lib/projects';
-import { DISCIPLINES } from '../lib/taxonomy';
 
 interface Props {
   lang: Lang;

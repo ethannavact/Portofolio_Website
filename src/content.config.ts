@@ -56,6 +56,9 @@ const projects = defineCollection({
       note: z.string().default(''),
       /** Still destacado: aparece en la Galería. */
       inGallery: z.boolean().default(false),
+      /** Id y lugar en la pestaña Media del estudio (la Galería sigue ese orden). */
+      mediaId: z.string().default(''),
+      mediaIndex: z.number().default(-1),
     };
 
     const block = z.discriminatedUnion('discriminant', [
@@ -119,6 +122,8 @@ const projects = defineCollection({
                 alt: t,
                 note: z.string().default(''),
                 inGallery: z.boolean().default(false),
+                mediaId: z.string().default(''),
+                mediaIndex: z.number().default(-1),
               }),
             )
             .default([]),
@@ -161,10 +166,12 @@ const projects = defineCollection({
       coverAlt: t,
       coverNote: z.string().default(''),
       coverInGallery: z.boolean().default(false),
+      coverMediaId: z.string().default(''),
+      coverMediaIndex: z.number().default(-1),
       heroVideo: video,
       blocks: z.array(block).default([]),
       stack: z.array(z.string()).default([]),
-      credits: z.array(z.object({ role: t, name: z.string().default('') })).default([]),
+      credits: z.array(z.object({ role: t, name: z.string().default(''), url: z.string().default('') })).default([]),
       sources: z.array(link).default([]),
       seoDescription: t,
       /** Proyectos similares (calculados por el estudio). */
@@ -259,7 +266,12 @@ const about = defineCollection({
 const strings = z.record(z.string(), z.string()).default({});
 const ui = defineCollection({
   loader: studioSection('ui', emptyLoader, { drafts: SHOW_DRAFTS }),
-  schema: z.object({ es: strings, en: strings }),
+  schema: z.object({
+    es: strings,
+    en: strings,
+    /** Nombres de los filtros editados en el estudio. */
+    disciplines: z.array(z.object({ value: z.string(), es: z.string().default(''), en: z.string().default('') })).default([]),
+  }),
 });
 
 export const collections = { projects, services, site, about, ui };

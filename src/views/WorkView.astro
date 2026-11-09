@@ -3,10 +3,9 @@ import { imageUrl } from '../lib/images';
 import Base from '../layouts/Base.astro';
 import Ruleta from '../components/Ruleta.astro';
 import { alternatesFor, caseRoute, route, type Lang } from '../i18n/routes';
-import { pick, ui } from '../i18n/ui';
+import { DISCIPLINES, pick, ui } from '../i18n/ui';
 import { getProjects } from '../lib/projects';
 import { breadcrumbLd } from '../lib/seo';
-import { DISCIPLINES } from '../lib/taxonomy';
 import { placeholderFor } from '../lib/placeholders';
 import { SHOW_DRAFTS } from '../lib/env';
 
