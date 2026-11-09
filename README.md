@@ -192,3 +192,11 @@ src/
 keystatic.config.ts   formularios del editor
 scripts/              auditoría a11y y build de vista previa
 ```
+
+## Contenido desde el estudio (9 nov 2026)
+
+El estudio publica en `content.json`, además de los proyectos, la pestaña **Sitio**: textos generales y reel (`site`), Info (`about`), servicios, textos de la interfaz y el orden de la Home. El sitio los lee en `src/lib/studio.ts` (`studioSection`) y los usa en lugar de los YAML de Keystatic. Si el estudio no los trae o no son válidos, el build sigue con Keystatic (no se rompe).
+
+- Textos de la interfaz: `src/i18n/overrides.ts` aplica los del estudio sobre `src/i18n/ui.ts` (solo textos simples; los que llevan número viven en el código).
+- Reel: si en el estudio hay un MP4 subido, la Home lo usa (loop de fondo y diálogo); si no, YouTube.
+- La frase de la Home respeta los saltos de línea.

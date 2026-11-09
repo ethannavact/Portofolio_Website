@@ -28,7 +28,13 @@ const base = Astro.site ?? new URL(Astro.url.origin);
 
 const brands = about.clientGroups[0]?.names ?? [];
 const description = plain(pick(site.seoDescription, lang) || pick(site.heroIntro, lang), 160);
-const hasReel = site.reel.provider !== 'none' && Boolean(site.reel.id || site.reel.url || site.reel.poster);
+const hasReel =
+  Boolean(site.reel.file || site.reel.loop) || (site.reel.provider !== 'none' && Boolean(site.reel.id || site.reel.url || site.reel.poster));
+// La frase de la Home respeta los saltos de línea que se escriben en el estudio.
+const heroLines = pick(site.heroLine, lang)
+  .split('\n')
+  .map((l) => l.trim())
+  .filter(Boolean);
 
 // Vista previa (junto al cursor) de cada servicio: la portada de su primer ejemplo.
 const serviceMedia = await Promise.all(
@@ -54,7 +60,14 @@ const serviceMedia = await Promise.all(
   <section class="statement" aria-labelledby="hero-title">
     {site.generativeLayer && <GenerativeLayer />}
     <div class="wrap grid statement-inner">
-      <h1 class="display statement-title" id="hero-title" data-scrub-words>{pick(site.heroLine, lang)}</h1>
+      <h1 class="display statement-title" id="hero-title" data-scrub-words>
+        {heroLines.map((line, i) => (
+          <Fragment>
+            {i > 0 && <br />}
+            {line}
+          </Fragment>
+        ))}
+      </h1>
       <div class="statement-side" data-reveal-group>
         <div class="lead" set:html={rich(pick(site.heroIntro, lang))} />
         <div class="actions">

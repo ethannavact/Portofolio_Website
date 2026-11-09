@@ -42,6 +42,20 @@ async function readSource(drafts: boolean, logger: { warn: (m: string) => void; 
   }
 }
 
+// Proyectos, textos del sitio, servicios, Info e interfaz salen del mismo content.json: se lee
+// una sola vez por sincronización (los loaders corren casi al mismo tiempo).
+let cached: { key: string; at: number; promise: Promise<M> } | undefined;
+function loadStudio(drafts: boolean, logger: { warn: (m: string) => void; info: (m: string) => void }): Promise<M> {
+  const key = String(drafts);
+  if (cached && cached.key === key && Date.now() - cached.at < 2000) return cached.promise;
+  const promise = readSource(drafts, logger) as Promise<M>;
+  cached = { key, at: Date.now(), promise };
+  promise.catch(() => {
+    if (cached?.promise === promise) cached = undefined;
+  });
+  return promise;
+}
+
 const ASPECTS: [string, number][] = [['16/9', 16 / 9], ['21/9', 21 / 9], ['4/3', 4 / 3], ['1/1', 1], ['4/5', 4 / 5], ['9/16', 9 / 16]];
 const nearestAspect = (w?: number, h?: number) =>
   w && h ? ASPECTS.reduce((a, b) => (Math.abs(b[1] - w / h) < Math.abs(a[1] - w / h) ? b : a))[0] : '16/9';
@@ -149,6 +163,7 @@ export function toEntries(data: M, mediaBase?: string) {
         published: p.published,
         featured: p.featured,
         order: p.order,
+        homeOrder: p.homeOrder ?? null,
         kind: p.kind,
         title: p.title,
         summary: p.summary,
@@ -183,7 +198,7 @@ export function studioLoader({ drafts }: { drafts: boolean }): Loader {
   return {
     name: 'estudio',
     load: async ({ store, parseData, generateDigest, logger }) => {
-      const data = await readSource(drafts, logger);
+      const data = await loadStudio(drafts, logger);
       if (data?.format !== 'ethan-content') throw new Error('El archivo de contenido no viene del estudio (format ≠ ethan-content).');
       const entries = toEntries(data, process.env.STUDIO_MEDIA_BASE);
       store.clear();
@@ -201,3 +216,99 @@ export function studioLoader({ drafts }: { drafts: boolean }): Loader {
     },
   };
 }
+
+// ─── Textos del sitio desde el estudio (pestaña «Sitio») ──────────────────────────────────
+// El estudio publica en content.json, además de los proyectos, los textos generales (Home,
+// contacto, reel), Info, los servicios y los textos de la interfaz. Si vienen, la web los usa en
+// lugar de los archivos de Keystatic; si no (o no son válidos), sigue con Keystatic.
+
+type Section = 'site' | 'about' | 'services' | 'ui';
+
+/** Video subido al estudio (MP4 HD/SD con póster) → forma que usa el sitio. */
+function fileVideo(m: M | undefined, base: string) {
+  if (!m || m.type !== 'video' || m.pending || !m.sources?.length) return undefined;
+  const url = (src: string) => (/^(https?:|data:|\/)/.test(src) ? src : base + src);
+  const poster = m.poster?.variants?.length
+    ? (() => {
+        const variants = m.poster.variants.map((v: M) => ({ src: url(v.src), width: v.w, height: v.h }));
+        const mid = variants.find((v: M) => v.width >= 1600) ?? variants[variants.length - 1];
+        return { remote: true as const, src: mid.src, width: m.poster.width, height: m.poster.height, variants, color: m.poster.color, lqip: m.poster.lqip };
+      })()
+    : undefined;
+  return {
+    url: url(m.sources[0].src),
+    sources: m.sources.map((x: M) => ({ src: url(x.src), width: x.w, height: x.h, type: x.type || 'video/mp4' })),
+    poster,
+    aspect: nearestAspect(m.width, m.height),
+  };
+}
+
+/** Las secciones del sitio que trae el content.json, ya con la forma de las colecciones. */
+export function siteFromStudio(data: M, mediaBase?: string): Partial<Record<Section, M>> {
+  const s = data?.site;
+  if (!s || typeof s !== 'object') return {};
+  const base = String(mediaBase ?? data.mediaBase ?? '').replace(/\/?$/, '/');
+  const out: Partial<Record<Section, M>> = {};
+  if (s.site && typeof s.site === 'object') {
+    const r = (s.site.reel ?? {}) as M;
+    // «Video en línea» (YouTube) queda de respaldo mientras no haya archivo subido.
+    const online = (r.online?.provider && r.online.provider !== 'none' ? r.online : r.provider !== 'file' ? r : {}) as M;
+    out.site = {
+      ...s.site,
+      reel: {
+        provider: online.provider || 'none',
+        id: online.id || '',
+        url: '',
+        title: r.title ?? E,
+        posterAlt: r.posterAlt ?? E,
+        posterProject: r.posterProject ?? '',
+        file: fileVideo(r.video, base),
+        loop: fileVideo(r.loop, base),
+      },
+    };
+  }
+  if (s.about && typeof s.about === 'object') out.about = s.about;
+  if (Array.isArray(s.services)) out.services = s.services;
+  if (s.ui && typeof s.ui === 'object') out.ui = { es: s.ui.es ?? {}, en: s.ui.en ?? {} };
+  return out;
+}
+
+/**
+ * Loader de una sección del sitio: usa lo publicado desde el estudio y, si no viene o no pasa
+ * la validación, el loader de respaldo (los YAML de Keystatic). Nunca rompe el build por esto.
+ */
+export function studioSection(section: Section, fallback: Loader, { drafts }: { drafts: boolean }): Loader {
+  return {
+    name: 'estudio',
+    load: async (ctx) => {
+      const { store, parseData, generateDigest, logger } = ctx;
+      let raw: { id: string; data: M }[] | undefined;
+      try {
+        const data = await loadStudio(drafts, logger);
+        const value = data?.format === 'ethan-content' ? siteFromStudio(data, process.env.STUDIO_MEDIA_BASE)[section] : undefined;
+        if (value) {
+          raw =
+            section === 'services'
+              ? (value as M[]).filter((v) => v && v.slug).map((v) => ({ id: String(v.slug), data: v }))
+              : [{ id: section === 'ui' ? 'strings' : section, data: value }];
+        }
+      } catch {
+        /* sin estudio: se queda Keystatic */
+      }
+      if (!raw) return fallback.load(ctx);
+      const parsed: { id: string; data: Record<string, unknown>; digest: string }[] = [];
+      try {
+        for (const e of raw) parsed.push({ id: e.id, data: await parseData({ id: e.id, data: e.data }), digest: generateDigest(e.data) });
+      } catch (err) {
+        logger.warn(`«${section}» del estudio no es válido; uso Keystatic. ${(err as Error).message}`);
+        return fallback.load(ctx);
+      }
+      store.clear();
+      for (const e of parsed) store.set(e);
+      logger.info(section === 'services' ? `${parsed.length} servicios desde el estudio` : `«${section}» desde el estudio`);
+    },
+  };
+}
+
+/** Respaldo vacío (para secciones que solo existen en el estudio, como los textos de la interfaz). */
+export const emptyLoader: Loader = { name: 'vacio', load: async ({ store }) => store.clear() };

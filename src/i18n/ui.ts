@@ -1,6 +1,8 @@
 import type { Lang } from './routes';
+import { uiOverrides } from './overrides';
 
-// Textos de interfaz. El contenido editorial vive en src/content (editable desde Keystatic).
+// Textos de interfaz. Estos son los de respaldo: el estudio (Sitio → Textos de la interfaz) puede
+// cambiar cualquiera que sea texto simple. Los que llevan número (p. ej. «3 proyectos») viven solo aquí.
 const es = {
   skip: 'Saltar al contenido',
   navLabel: 'Principal',
@@ -250,7 +252,17 @@ const en: typeof es = {
 };
 
 export type UIStrings = typeof es;
-const UI: Record<Lang, UIStrings> = { es, en };
+
+/** Aplica los textos del estudio: solo claves que existen aquí y que son texto (no funciones). */
+const withStudio = (base: UIStrings, extra: Record<string, string> | undefined): UIStrings => {
+  const out: Record<string, unknown> = { ...base };
+  for (const [k, v] of Object.entries(extra ?? {})) {
+    if (typeof out[k] === 'string' && typeof v === 'string' && v.trim()) out[k] = v;
+  }
+  return out as UIStrings;
+};
+
+const UI: Record<Lang, UIStrings> = { es: withStudio(es, uiOverrides.es), en: withStudio(en, uiOverrides.en) };
 export const ui = (lang: Lang): UIStrings => UI[lang];
 
 /** Elige el idioma de un campo bilingüe con respaldo al otro idioma. */

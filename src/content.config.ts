@@ -9,11 +9,12 @@ import {
   PROJECT_KIND_VALUES,
   VIDEO_PROVIDER_VALUES,
 } from './lib/taxonomy';
-import { studioLoader } from './lib/studio';
+import { emptyLoader, studioLoader, studioSection } from './lib/studio';
 import { SHOW_DRAFTS } from './lib/env';
 
-// Los proyectos vienen del Estudio de contenido (src/lib/studio.ts); el resto, de Keystatic
-// (keystatic.config.ts). Si agregas un campo en uno de los dos, agrégalo aquí también.
+// Todo viene del Estudio de contenido (src/lib/studio.ts): proyectos y, si el estudio los publica,
+// los textos del sitio, Info, servicios y textos de la interfaz. Keystatic (keystatic.config.ts)
+// queda de respaldo para lo que el estudio no traiga. Si agregas un campo, agrégalo aquí también.
 
 const t = z.object({ es: z.string().default(''), en: z.string().default('') }).default({ es: '', en: '' });
 
@@ -142,6 +143,8 @@ const projects = defineCollection({
       published: z.boolean().default(false),
       featured: z.boolean().default(false),
       order: z.number().nullish().transform((v) => v ?? 100),
+      /** Posición en la Home (estudio → Sitio → Orden de proyectos → Home). */
+      homeOrder: z.number().nullish().transform((v) => v ?? 1000),
       kind: z.enum(PROJECT_KIND_VALUES).default('produced'),
       title: t,
       summary: t,
@@ -171,8 +174,18 @@ const projects = defineCollection({
   })(),
 });
 
+/** Video subido al estudio (MP4 en R2), p. ej. el reel. */
+const fileVideo = z.object({
+  url: z.string(),
+  sources: z
+    .array(z.object({ src: z.string(), width: z.number().optional(), height: z.number().optional(), type: z.string().default('video/mp4') }))
+    .default([]),
+  poster: remoteImage.optional(),
+  aspect: z.string().default('16/9'),
+});
+
 const site = defineCollection({
-  loader: glob({ pattern: 'site.yaml', base: './src/content/singletons' }),
+  loader: studioSection('site', glob({ pattern: 'site.yaml', base: './src/content/singletons' }), { drafts: SHOW_DRAFTS }),
   schema: ({ image }) =>
     z.object({
     name: z.string().default('Ethan Nava'),
@@ -194,6 +207,9 @@ const site = defineCollection({
         posterAlt: t,
         /** Si se elige, el póster es la portada de ese proyecto (y su texto alternativo). */
         posterProject: z.string().default(''),
+        /** Reel subido al estudio: completo (diálogo) y loop de fondo. Tienen prioridad sobre YouTube. */
+        file: fileVideo.optional(),
+        loop: fileVideo.optional(),
       })
       .default({ provider: 'none', id: '', url: '', title: { es: '', en: '' }, posterAlt: { es: '', en: '' }, posterProject: '' }),
     modes: z.array(z.object({ title: t, body: t })).default([]),
@@ -206,7 +222,7 @@ const site = defineCollection({
 const item = z.object({ title: t, body: t });
 
 const services = defineCollection({
-  loader: glob({ pattern: '*.yaml', base: './src/content/services' }),
+  loader: studioSection('services', glob({ pattern: '*.yaml', base: './src/content/services' }), { drafts: SHOW_DRAFTS }),
   schema: z.object({
     name: z.string(),
     published: z.boolean().default(false),
@@ -225,7 +241,7 @@ const services = defineCollection({
 });
 
 const about = defineCollection({
-  loader: glob({ pattern: 'about.yaml', base: './src/content/singletons' }),
+  loader: studioSection('about', glob({ pattern: 'about.yaml', base: './src/content/singletons' }), { drafts: SHOW_DRAFTS }),
   schema: z.object({
     bio: t,
     approach: t,
@@ -238,4 +254,12 @@ const about = defineCollection({
   }),
 });
 
-export const collections = { projects, services, site, about };
+// Textos de la interfaz editados en el estudio (menú, botones, títulos). Solo cambian los que el
+// estudio trae; los demás quedan como en src/i18n/ui.ts.
+const strings = z.record(z.string(), z.string()).default({});
+const ui = defineCollection({
+  loader: studioSection('ui', emptyLoader, { drafts: SHOW_DRAFTS }),
+  schema: z.object({ es: strings, en: strings }),
+});
+
+export const collections = { projects, services, site, about, ui };

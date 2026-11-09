@@ -16,7 +16,10 @@ export async function getProjects(): Promise<Project[]> {
 
 export async function getFeatured(limit = 6): Promise<Project[]> {
   const list = await getProjects();
-  const featured = list.filter((p) => p.data.featured && p.data.published);
+  // Orden propio de la Home (estudio → Sitio → Orden de proyectos); si no hay, el del índice.
+  const featured = list
+    .filter((p) => p.data.featured && p.data.published)
+    .sort((a, b) => a.data.homeOrder - b.data.homeOrder || byOrder(a, b));
   return (featured.length ? featured : list.filter((p) => p.data.published)).slice(0, limit);
 }
 

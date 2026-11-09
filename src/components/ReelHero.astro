@@ -20,9 +20,21 @@ const reel = site.reel;
 const title = pick(reel.title, lang) || `${t.reelLabel} — ${site.name}`;
 const youtubeId = reel.provider === 'youtube' ? reel.id.trim() : '';
 const thumb = youtubeId && !IS_PREVIEW ? `https://i.ytimg.com/vi/${encodeURIComponent(youtubeId)}/maxresdefault.jpg` : '';
-// El botón es un enlace real a YouTube: funciona sin JavaScript y donde no se puede incrustar
-// (el preview publicado). En el sitio, reel.ts lo convierte en el diálogo con el reel completo.
-const watchUrl = youtubeId ? `https://www.youtube.com/watch?v=${encodeURIComponent(youtubeId)}` : '';
+// Reel subido al estudio (MP4 en R2): tiene prioridad sobre YouTube. El loop de fondo es su
+// propio archivo; si no hay, se usa el reel completo.
+type FileVideo = NonNullable<typeof reel.file>;
+const sized = (v: FileVideo | undefined) => {
+  if (!v) return { hd: '', sd: '' };
+  const hd = v.sources.find((s) => (s.width ?? 0) >= 1600)?.src ?? v.url;
+  const sd = v.sources.find((s) => (s.width ?? 0) > 0 && (s.width ?? 0) < 1600)?.src ?? hd;
+  return { hd, sd };
+};
+const full = sized(reel.file);
+const loop = sized(reel.loop ?? reel.file);
+const filePoster = reel.file?.poster ?? reel.loop?.poster;
+// El botón es un enlace real (al MP4 o a YouTube): funciona sin JavaScript y donde no se puede
+// incrustar (el preview publicado). En el sitio, reel.ts lo convierte en el diálogo con el reel completo.
+const watchUrl = full.hd || (youtubeId ? `https://www.youtube.com/watch?v=${encodeURIComponent(youtubeId)}` : '');
 // Póster desde la portada de un proyecto del estudio (Keystatic → «Póster: portada de un proyecto»).
 // Con crossorigin, como en la ruleta: la misma URL queda en caché con CORS y WebGL la puede usar.
 const posterEntry = reel.posterProject ? await getEntry('projects', reel.posterProject) : undefined;
@@ -30,7 +42,19 @@ const cover = posterEntry?.data.cover;
 const coverAlt = posterEntry ? pick(posterEntry.data.coverAlt, lang) : '';
 ---
 
-<section class="reel-hero" aria-label={title} data-reel data-yt={youtubeId} data-title={title} data-preview={IS_PREVIEW ? 'true' : undefined}>
+<section
+  class="reel-hero"
+  aria-label={title}
+  data-reel
+  data-yt={youtubeId}
+  data-file-hd={full.hd || undefined}
+  data-file-sd={full.sd || undefined}
+  data-loop-hd={loop.hd || undefined}
+  data-loop-sd={loop.sd || undefined}
+  data-poster={filePoster?.src}
+  data-title={title}
+  data-preview={IS_PREVIEW ? 'true' : undefined}
+>
   <div class="reel-frame" data-reel-frame>
     <div class="reel-media">
       {
@@ -59,6 +83,20 @@ const coverAlt = posterEntry ? pick(posterEntry.data.coverAlt, lang) : '';
             loading="eager"
             fetchpriority="high"
             class="reel-poster"
+          />
+        ) : filePoster ? (
+          <img
+            class="reel-poster"
+            src={filePoster.src}
+            srcset={remoteSrcset(filePoster)}
+            sizes="100vw"
+            width={filePoster.width}
+            height={filePoster.height}
+            alt={pick(reel.posterAlt, lang)}
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+            style={filePoster.color ? `background-color: ${filePoster.color}` : undefined}
           />
         ) : thumb ? (
           <img class="reel-poster" src={thumb} alt="" width="1280" height="720" fetchpriority="high" />
@@ -165,6 +203,14 @@ const coverAlt = posterEntry ? pick(posterEntry.data.coverAlt, lang) : '';
 
   .reel-bg:global(.is-hidden) {
     opacity: 0;
+  }
+
+  .reel-bg :global(video) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   .reel-bg :global(iframe) {
@@ -294,6 +340,15 @@ const coverAlt = posterEntry ? pick(posterEntry.data.coverAlt, lang) : '';
   .reel-player {
     position: relative;
     aspect-ratio: 16 / 9;
+    background: #000;
+  }
+
+  .reel-player :global(video) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
     background: #000;
   }
 

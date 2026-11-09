@@ -20,7 +20,11 @@ const bio = pick(about.bio, lang);
 const approach = pick(about.approach, lang);
 const availability = pick(site.availability, lang);
 // «2018 —» = sigue en curso: se muestra «2018 — Actualidad».
-const years = (value: string) => (/—\s*$/.test(value.trim()) ? `${value.trim()} ${t.present}` : value);
+// «2018 —», «2018 — Actualidad» o «2018 — Currently» → «2018 — Actualidad / Present» según el idioma.
+const years = (value: string) => {
+  const v = value.trim().replace(/—\s*(actualidad|presente|hoy|present|currently|now|today)\s*$/i, '—');
+  return /—\s*$/.test(v) ? `${v} ${t.present}` : v;
+};
 const stackGroups = about.stackGroups.filter((g) => g.items.length > 0);
 ---
 

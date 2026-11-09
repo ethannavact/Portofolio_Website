@@ -1,5 +1,6 @@
 // Reel de la Home: corre en loop, mudo, de fondo (cuando el movimiento está activo),
 // y se abre completo con sonido en un diálogo. Siempre se puede pausar (WCAG 2.2.2).
+// Fuente: el MP4 subido al estudio (R2) si existe; si no, YouTube.
 import { isMotion, onIdle, state } from './core';
 
 const YT_ORIGIN = 'https://www.youtube-nocookie.com';
@@ -24,6 +25,13 @@ const ytSrc = (id: string, bg: boolean) => {
   return `${YT_ORIGIN}/embed/${encodeURIComponent(id)}?${p}`;
 };
 
+/** HD en pantallas grandes; SD en teléfonos o con ahorro de datos. */
+const bySize = (hd?: string, sd?: string) => {
+  const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData;
+  const small = saveData || window.innerWidth * Math.min(window.devicePixelRatio || 1, 2) < 1600;
+  return (small ? sd || hd : hd || sd) || '';
+};
+
 const command = (iframe: HTMLIFrameElement | null, func: 'playVideo' | 'pauseVideo') =>
   iframe?.contentWindow?.postMessage(JSON.stringify({ event: 'command', func, args: [] }), YT_ORIGIN);
 
@@ -38,7 +46,10 @@ export function initReel() {
   const player = section.querySelector<HTMLElement>('[data-reel-player]');
   const closeBtn = section.querySelector<HTMLButtonElement>('[data-reel-close]');
   const preview = section.dataset.preview === 'true';
+  const fileFull = bySize(section.dataset.fileHd, section.dataset.fileSd);
+  const fileLoop = bySize(section.dataset.loopHd, section.dataset.loopSd);
   let bgFrame: HTMLIFrameElement | null = null;
+  let bgVideo: HTMLVideoElement | null = null;
   let heard = false; // YouTube respondió: el reproductor existe y acepta comandos
   let shown = false; // YouTube confirmó que reproduce: el video ya se ve
   let userPaused = false;
@@ -53,21 +64,55 @@ export function initReel() {
   };
 
   const setPlaying = (on: boolean) => {
-    if (!bgFrame || !heard) return;
-    command(bgFrame, on ? 'playVideo' : 'pauseVideo');
+    if (bgVideo) {
+      if (on) bgVideo.play().catch(() => {});
+      else bgVideo.pause();
+    } else {
+      if (!bgFrame || !heard) return;
+      command(bgFrame, on ? 'playVideo' : 'pauseVideo');
+    }
     playing = on;
     renderToggle();
   };
 
   const update = () => {
-    if (!bgFrame) return;
+    if (!bgFrame && !bgVideo) return;
     const should = visible && isMotion() && !userPaused && !dialog?.open;
     if (should !== playing) setPlaying(should);
     bgBox?.classList.toggle('is-hidden', !isMotion());
   };
 
+  // Loop de fondo desde el MP4 del estudio: mudo, sin controles, solo se muestra cuando ya corre.
+  const mountFileBackground = () => {
+    if (!bgBox) return;
+    const video = document.createElement('video');
+    video.muted = true;
+    video.defaultMuted = true;
+    video.loop = true;
+    video.playsInline = true;
+    video.preload = 'auto';
+    video.setAttribute('muted', '');
+    video.setAttribute('playsinline', '');
+    video.setAttribute('aria-hidden', 'true');
+    video.tabIndex = -1;
+    video.src = fileLoop;
+    video.addEventListener('playing', () => {
+      if (shown) return;
+      shown = true;
+      bgBox.classList.add('is-playing');
+      renderToggle();
+    });
+    bgBox.append(video);
+    bgVideo = video;
+    heard = true;
+    playing = false;
+    update();
+  };
+
   const mountBackground = () => {
-    if (bgFrame || !bgBox || !id || preview || !isMotion()) return;
+    if (bgFrame || bgVideo || !bgBox || preview || !isMotion()) return;
+    if (fileLoop) return mountFileBackground();
+    if (!id) return;
     const iframe = document.createElement('iframe');
     iframe.src = ytSrc(id, true);
     iframe.title = section.dataset.title ?? 'Reel';
@@ -130,8 +175,24 @@ export function initReel() {
   // Reel completo con sonido.
   // Sin diálogo, sin id o en el preview publicado (no admite iframes): el enlace abre YouTube.
   openBtn?.addEventListener('click', (event) => {
-    if (!dialog || !player || preview || !id) return;
+    if (!dialog || !player || preview || (!fileFull && !id)) return;
     event.preventDefault();
+    if (fileFull) {
+      const video = document.createElement('video');
+      video.controls = true;
+      video.autoplay = true;
+      video.playsInline = true;
+      video.setAttribute('playsinline', '');
+      if (section.dataset.poster) video.poster = section.dataset.poster;
+      video.src = fileFull;
+      player.replaceChildren(video);
+      dialog.showModal();
+      state.lenis?.stop();
+      update();
+      video.play().catch(() => {});
+      closeBtn?.focus();
+      return;
+    }
     const iframe = document.createElement('iframe');
     iframe.src = ytSrc(id, false);
     iframe.title = section.dataset.title ?? 'Reel';
